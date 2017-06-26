@@ -47,8 +47,19 @@ function onMapReady(args) {
   setTimeout(() => {
     map.setOnMapClickListener((point: LatLng) => {
       console.log(`Map clicked: ${JSON.stringify(point)}`);
+      var features = map.getFeaturesAtLatLng(point, ["departments"]);
+      console.dir(features);
+
+      try {
+      var viewportFeatures = map.getFeaturesInViewport(["departments"]);
+      console.dir(viewportFeatures);
+    }
+    catch (ex) {
+      console.log(ex);
+    }
     });
 
+/*
     map.setViewport(
         {
           bounds: {
@@ -59,9 +70,10 @@ function onMapReady(args) {
           },
           animated: true
         }
-    );
+    );*/
   }, 3000);
 
+/*
   setTimeout(() => {
     map.setMapStyle(MapStyle.TRAFFIC_NIGHT);
   }, 6000);

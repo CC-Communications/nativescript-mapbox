@@ -180,6 +180,32 @@ export interface DownloadOfflineRegionOptions extends OfflineRegion {
   accessToken?: string;
 }
 
+export interface Feature {
+  id:number;
+  type:string;
+  properties:any[];
+  geometry:GeometryShape;
+}
+
+export enum GeometryType {
+    Point = <any>"Point",
+    MultiPoint = <any>"MultiPoint",
+    LineString = <any>"LineString",
+    MultiLineString = <any>"MultiLineString",
+    Polygon = <any>"Polygon",
+    MultiPolygon = <any>"MultiPolygon",
+    GeometryCollection = <any>"GeometryCollection",
+}
+
+export interface GeometryShape {
+    type: GeometryType;
+    coordinates: number[];
+}
+
+export interface MapPoint {
+  x:number;
+  y:number;
+}
 /**
  * The options object passed into the show function.
  */
@@ -298,7 +324,15 @@ export interface MapboxApi {
 
   addGeoJsonClustered(options: AddGeoJsonClusteredOptions): Promise<any>;
 
-  // addExtrusion(options: AddExtrusionOptions): Promise<any>;
+// addExtrusion(options: AddExtrusionOptions): Promise<any>;
+
+  getFeaturesAtPoint(data:MapPoint, layers:string[], nativeMap?):Feature[];
+  getFeaturesAtLatLng(data:LatLng, layers:string[], nativeMap?):Feature[];
+
+  getFeaturesInPointRect(northeast:MapPoint, southwest:MapPoint, layers:string[], nativeMap?):Feature[];
+  getFeaturesInLatLngRect(northeast:LatLng, southwest:LatLng, layers:string[], nativeMap?):Feature[];
+
+  getFeaturesInViewport(layers:string[], nativeMap?): Feature[];
 }
 
 export abstract class MapboxCommon implements MapboxCommonApi {
@@ -374,6 +408,13 @@ export interface MapboxViewApi {
   removePolylines(ids?: Array<any>): Promise<any>;
   animateCamera(options: AnimateCameraOptions): Promise<any>;
   destroy(): Promise<any>;
+
+  getFeaturesAtPoint(data:MapPoint, layers:string[]):Feature[];
+  getFeaturesAtLatLng(data:LatLng, layers:string[]):Feature[];
+  getFeaturesInPointRect(northeast:MapPoint, southwest:MapPoint, layers:string[]):Feature[];
+  getFeaturesInLatLngRect(northeast:LatLng, southwest:LatLng, layers:string[]):Feature[];
+  getFeaturesInViewport(layers:string[]): Feature[];
+
 }
 
 export abstract class MapboxViewCommonBase extends View implements MapboxViewApi {
@@ -448,6 +489,23 @@ export abstract class MapboxViewCommonBase extends View implements MapboxViewApi
   destroy(): Promise<any> {
     return this.mapbox.destroy(this.getNativeMapView());
   }
+
+  getFeaturesAtPoint(data:MapPoint, layers:string[]):Feature[] {
+    return this.mapbox.getFeaturesAtPoint(data,layers,this.getNativeMapView());
+  }
+  getFeaturesAtLatLng(data:LatLng, layers:string[]):Feature[] {
+    return this.mapbox.getFeaturesAtLatLng(data,layers, this.getNativeMapView());
+  }
+  getFeaturesInPointRect(northeast:MapPoint, southwest:MapPoint, layers:string[]):Feature[] {
+    return this.mapbox.getFeaturesInPointRect(northeast,southwest,this.getNativeMapView());
+  }
+  getFeaturesInLatLngRect(northeast:LatLng, southwest:LatLng, layers:string[]):Feature[] {
+    return this.mapbox.getFeaturesInLatLngRect(northeast,southwest,layers,this.getNativeMapView());
+  }
+  getFeaturesInViewport(layers:string[]): Feature[] {
+    return this.mapbox.getFeaturesInViewport(layers,this.getNativeMapView());
+  }
+
 }
 
 export const zoomLevelProperty = new Property<MapboxViewCommonBase, number>({ name: "zoomLevel" });

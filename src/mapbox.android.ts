@@ -13,7 +13,7 @@ import {
   MapboxCommon,
   MapboxViewBase,
   MapStyle, OfflineRegion, SetCenterOptions, SetTiltOptions, SetViewportOptions, SetZoomLevelOptions, ShowOptions,
-  Viewport, AddExtrusionOptions
+  Viewport, Feature, MapPoint, AddExtrusionOptions
 } from "./mapbox.common";
 
 // Export the enums for devs not using TS
@@ -1184,6 +1184,62 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
       }
     });
   }
+
+  getFeaturesAtPoint(data: MapPoint, layers: string[], nativeMap?): Feature[] {
+    const theMap = nativeMap || _mapbox;
+    let point: android.graphics.PointF = new android.graphics.PointF();
+    point.x = data.x;
+    point.y = data.y;
+
+    var results: any = theMap.mapboxMap.queryRenderedFeatures(point, layers);
+    var features: Feature[] = [];
+
+    for (var idx = 0; idx < results.size(); idx++)
+      features.push(JSON.parse(results.get(idx).toJson()));
+
+    return features;
+  }
+
+  getFeaturesAtLatLng(data: LatLng, layers: string[], nativeMap?): Feature[] {
+    const theMap = nativeMap || _mapbox;
+    let coordinate: any = new com.mapbox.mapboxsdk.geometry.LatLng(data.lat, data.lng);
+    let point: android.graphics.PointF = theMap.mapboxMap.getProjection().toScreenLocation(coordinate);
+
+    return this.getFeaturesAtPoint(point as MapPoint, layers, nativeMap);
+  }
+
+  getFeaturesInPointRect(northeast: MapPoint, southwest: MapPoint, layers: string[], nativeMap?): Feature[] {
+    const theMap = nativeMap || _mapbox;
+    let rect: android.graphics.RectF = new android.graphics.RectF(northeast.x, northeast.y, southwest.x, southwest.y);
+    var results: any = theMap.mapboxMap.queryRenderedFeatures(rect, layers);
+    var features: Feature[] = [];
+
+    for (var idx = 0; idx < results.size(); idx++)
+      features.push(JSON.parse(results.get(idx).toJson()));
+
+    return features;
+  }
+  getFeaturesInLatLngRect(northeast: LatLng, southwest: LatLng, layers: string[], nativeMap?): Feature[] {
+    const theMap = nativeMap || _mapbox;
+    let neCoordinate: any = new com.mapbox.mapboxsdk.geometry.LatLng(northeast.lat, northeast.lng);
+    let swCoordinate: any = new com.mapbox.mapboxsdk.geometry.LatLng(southwest.lat, southwest.lng);
+
+    let nePoint: MapPoint = theMap.mapboxMap.getProjection().toScreenLocation(neCoordinate);
+    let swPoint: MapPoint = theMap.mapboxMap.getProjection().toScreenLocation(swCoordinate);
+
+    return this.getFeaturesInPointRect(nePoint, swPoint, layers, nativeMap);
+  }
+  getFeaturesInViewport(layers: string[], nativeMap?): Feature[] {
+    const theMap = nativeMap || _mapbox;
+    const bounds = theMap.mapboxMap.getProjection().getVisibleRegion().latLngBounds;
+    let neCoordinate: LatLng = { lat: bounds.getLatNorth(), lng: bounds.getLonEast() };
+    let swCoordinate: LatLng = { lat: bounds.getLatSouth(), lng: bounds.getLonWest() };
+
+    return this.getFeaturesInLatLngRect(neCoordinate, swCoordinate, layers, nativeMap);
+
+  }
+
+
 
   private static getAndroidColor(color: string | Color): any {
     let androidColor;
