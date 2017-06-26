@@ -12,6 +12,7 @@ export function pageLoaded(args: observable.EventData) {
 
 function onMapReady(args) {
   let map: MapboxViewApi = args.map;
+  /*
   map.addMarkers([
     {
       id: 2,
@@ -28,12 +29,23 @@ function onMapReady(args) {
       }
     }]
   );
-
+*/
   setTimeout(() => {
     map.setOnMapClickListener((point: LatLng) => {
       console.log(`Map clicked: ${JSON.stringify(point)}`);
+      var features = map.getFeaturesAtLatLng(point, ["departments"]);
+      console.dir(features);
+
+      try {
+      var viewportFeatures = map.getFeaturesInViewport(["departments"]);
+      console.dir(viewportFeatures);
+    }
+    catch (ex) {
+      console.log(ex);
+    }
     });
 
+/*
     map.setViewport(
         {
           bounds: {
@@ -44,9 +56,10 @@ function onMapReady(args) {
           },
           animated: true
         }
-    );
+    );*/
   }, 3000);
 
+/*
   setTimeout(() => {
     map.setMapStyle(MapStyle.DARK);
   }, 5000);
@@ -112,7 +125,7 @@ function onMapReady(args) {
 
   // setTimeout(() => {
   //   map.removePolylines([10]);
-  // }, 15000);
+  // }, 15000);*/
 }
 
 exports.onMapReady = onMapReady;

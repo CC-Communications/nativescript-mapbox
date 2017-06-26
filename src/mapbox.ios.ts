@@ -11,7 +11,7 @@ import {
   MapboxCommon,
   MapboxViewBase,
   MapStyle, OfflineRegion, SetCenterOptions, SetTiltOptions, SetViewportOptions, SetZoomLevelOptions, ShowOptions,
-  Viewport
+  Viewport, Feature, MapPoint
 } from "./mapbox.common";
 
 // Export the enums for devs not using TS
@@ -131,23 +131,23 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
         }
 
         const view = utils.ios.getter(UIApplication, UIApplication.sharedApplication).keyWindow.rootViewController.view,
-            frameRect = view.frame,
-            mapFrame = CGRectMake(
-                settings.margins.left,
-                settings.margins.top,
-                frameRect.size.width - settings.margins.left - settings.margins.right,
-                frameRect.size.height - settings.margins.top - settings.margins.bottom
-            ),
-            styleURL = _getMapStyle(settings.style);
+          frameRect = view.frame,
+          mapFrame = CGRectMake(
+            settings.margins.left,
+            settings.margins.top,
+            frameRect.size.width - settings.margins.left - settings.margins.right,
+            frameRect.size.height - settings.margins.top - settings.margins.bottom
+          ),
+          styleURL = _getMapStyle(settings.style);
 
         MGLAccountManager.setAccessToken(settings.accessToken);
         _mapbox.mapView = MGLMapView.alloc().initWithFrameStyleURL(mapFrame, styleURL);
         _setMapboxMapOptions(_mapbox.mapView, settings);
 
         _mapbox.mapView.delegate = _delegate = MGLMapViewDelegateImpl.new().initWithCallback(
-            () => {
-              resolve();
-            }
+          () => {
+            resolve();
+          }
         );
 
         _markers = [];
@@ -340,9 +340,9 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
         const durationMs = options.duration ? options.duration : 5000;
 
         theMap.setCameraWithDurationAnimationTimingFunction(
-            cam,
-            durationMs / 1000,
-            CAMediaTimingFunction.functionWithName(kCAMediaTimingFunctionEaseInEaseOut));
+          cam,
+          durationMs / 1000,
+          CAMediaTimingFunction.functionWithName(kCAMediaTimingFunctionEaseInEaseOut));
 
         setTimeout(() => {
           resolve();
@@ -414,9 +414,9 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
         let durationMs = options.duration ? options.duration : 10000;
 
         theMap.setCameraWithDurationAnimationTimingFunction(
-            cam,
-            durationMs / 1000,
-            CAMediaTimingFunction.functionWithName(kCAMediaTimingFunctionEaseInEaseOut));
+          cam,
+          durationMs / 1000,
+          CAMediaTimingFunction.functionWithName(kCAMediaTimingFunctionEaseInEaseOut));
 
         setTimeout(() => {
           resolve();
@@ -522,10 +522,10 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
         };
 
         let region = MGLTilePyramidOfflineRegion.alloc().initWithStyleURLBoundsFromZoomLevelToZoomLevel(
-            styleURL,
-            bounds,
-            options.minZoom,
-            options.maxZoom);
+          styleURL,
+          bounds,
+          options.minZoom,
+          options.maxZoom);
 
         // TODO there's more observers, see https://www.mapbox.com/ios-sdk/examples/offline-pack/
         if (options.onProgress) {
@@ -567,7 +567,7 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
         });
 
         // Store some data for identification purposes alongside the downloaded resources.
-        let userInfo = {"name": options.name};
+        let userInfo = { "name": options.name };
         let context = NSKeyedArchiver.archivedDataWithRootObject(userInfo);
 
         // Create and register an offline pack with the shared offline storage object.
@@ -667,11 +667,95 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
   addGeoJsonClustered(options: AddGeoJsonClusteredOptions, nativeMap?): Promise<any> {
     throw new Error('Method not implemented.');
   }
+
+  getFeaturesAtPoint(data: MapPoint, layers: string[], nativeMap?): Feature[] {
+    const theMap: MGLMapView = nativeMap || _mapbox.mapView;
+    let layersSet: NSSet<string> = NSSet.setWithArray(utils.ios.collections.jsArrayToNSArray(layers)) as NSSet<string>;
+    let results: any[] = utils.ios.collections.nsArrayToJSArray(theMap
+      .visibleFeaturesAtPointInStyleLayersWithIdentifiers(
+      data instanceof CGPoint ? data : CGPointMake(data.x, data.y),
+      layersSet
+      ));
+
+    return results.map((f) => this._deserialize(f.geoJSONDictionary()));
+  }
+
+  getFeaturesAtLatLng(data: LatLng, layers: string[], nativeMap?): Feature[] {
+    const theMap: MGLMapView = nativeMap || _mapbox.mapView;
+    let coordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(data.lat, data.lng);
+    let point: CGPoint = theMap.convertCoordinateToPointToView(coordinate, theMap.superview);
+
+    return this.getFeaturesAtPoint(point as MapPoint, layers, nativeMap);
+  }
+
+  getFeaturesInPointRect(northeast: MapPoint, southwest: MapPoint, layers: string[], nativeMap?): Feature[] {
+    const theMap: MGLMapView = nativeMap || _mapbox.mapView;
+    let layersSet: NSSet<string> = NSSet.setWithArray(utils.ios.collections.jsArrayToNSArray(layers)) as NSSet<string>;
+
+    // CGRectMake takes x,y,width,height so we have to mix the points from ne/sw
+
+    let results: any[] = utils.ios.collections.nsArrayToJSArray(
+      theMap.visibleFeaturesInRectInStyleLayersWithIdentifiers(CGRectMake(southwest.x, northeast.y, northeast.x - southwest.x, southwest.y - northeast.y), layersSet));
+
+    return results.map((f) => this._deserialize(f.geoJSONDictionary()));
+  }
+  getFeaturesInLatLngRect(northeast: LatLng, southwest: LatLng, layers: string[], nativeMap?): Feature[] {
+    const theMap: MGLMapView = nativeMap || _mapbox.mapView;
+    let layersSet: NSSet<string> = NSSet.setWithArray(utils.ios.collections.jsArrayToNSArray(layers)) as NSSet<string>;
+
+    let swCoordinate = CLLocationCoordinate2DMake(southwest.lat, southwest.lng);
+    let neCoordinate = CLLocationCoordinate2DMake(northeast.lat, northeast.lng);
+
+    let bounds: MGLCoordinateBounds = {
+      sw: swCoordinate,
+      ne: neCoordinate
+    };
+    let rect: CGRect = theMap.convertCoordinateBoundsToRectToView(bounds, theMap.superview);
+
+    let results: any[] = utils.ios.collections.nsArrayToJSArray(
+      theMap.visibleFeaturesInRectInStyleLayersWithIdentifiers(rect, layersSet));
+
+    return results.map((f) => this._deserialize(f.geoJSONDictionary()));
+  }
+  getFeaturesInViewport(layers: string[], nativeMap?): Feature[] {
+    const theMap: MGLMapView = nativeMap || _mapbox.mapView;
+    let layersSet: NSSet<string> = NSSet.setWithArray(utils.ios.collections.jsArrayToNSArray(layers)) as NSSet<string>;
+
+    let results: any[] = utils.ios.collections.nsArrayToJSArray(
+      theMap.visibleFeaturesInRectInStyleLayersWithIdentifiers(theMap.convertCoordinateBoundsToRectToView(theMap.visibleCoordinateBounds, theMap.superview), layersSet));
+
+    return results.map((f) => this._deserialize(f.geoJSONDictionary()));
+  }
+
+  private _deserialize(nativeData: any): any {
+    if (nativeData instanceof NSNull) {
+      return null;
+    }
+
+    if (nativeData instanceof NSArray) {
+      let array = [];
+      for (let i = 0, n = nativeData.count; i < n; i++) {
+        array[i] = this._deserialize(nativeData.objectAtIndex(i));
+      };
+      return array;
+    }
+
+    if (nativeData instanceof NSDictionary) {
+      let dict = {};
+      for (let i = 0, n = nativeData.allKeys.count; i < n; i++) {
+        let key = nativeData.allKeys.objectAtIndex(i);
+        dict[key] = this._deserialize(nativeData.objectForKey(key));
+      };
+      return dict;
+    }
+
+    return nativeData;
+  }
 }
 
 const _addObserver = (eventName, callback) => {
   return utils.ios.getter(NSNotificationCenter, NSNotificationCenter.defaultCenter).addObserverForNameObjectQueueUsingBlock(
-      eventName, null, utils.ios.getter(NSOperationQueue, NSOperationQueue.mainQueue), callback);
+    eventName, null, utils.ios.getter(NSOperationQueue, NSOperationQueue.mainQueue), callback);
 };
 
 const _downloadImage = (marker) => {
@@ -684,14 +768,14 @@ const _downloadImage = (marker) => {
     }
     // ..or not to cache
     http.getImage(marker.icon).then(
-        (output) => {
-          marker.iconDownloaded = output.ios;
-          _markerIconDownloadCache[marker.icon] = marker.iconDownloaded;
-          resolve(marker);
-        }, (ignoredError) => {
-          console.log(`Download failed for ${marker.icon} with error: ${ignoredError}`);
-          resolve(marker);
-        });
+      (output) => {
+        marker.iconDownloaded = output.ios;
+        _markerIconDownloadCache[marker.icon] = marker.iconDownloaded;
+        resolve(marker);
+      }, (ignoredError) => {
+        console.log(`Download failed for ${marker.icon} with error: ${ignoredError}`);
+        resolve(marker);
+      });
   });
 };
 
@@ -840,9 +924,9 @@ class MGLMapViewDelegateImpl extends NSObject implements MGLMapViewDelegate {
     for (let m in _markers) {
       let cached = _markers[m];
       if (cached.lat === tapped.coordinate.latitude &&
-          cached.lng === tapped.coordinate.longitude &&
-          cached.title === tapped.title &&
-          cached.subtitle === tapped.subtitle) {
+        cached.lng === tapped.coordinate.longitude &&
+        cached.title === tapped.title &&
+        cached.subtitle === tapped.subtitle) {
         return cached;
       }
     }

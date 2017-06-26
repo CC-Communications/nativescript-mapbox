@@ -1,6 +1,6 @@
 import * as utils from "utils/utils";
 import * as application from "application";
-import * as frame  from "ui/frame";
+import * as frame from "ui/frame";
 import * as fs from "file-system";
 import { Color } from "color";
 import * as http from "http";
@@ -13,7 +13,7 @@ import {
   MapboxCommon,
   MapboxViewBase,
   MapStyle, OfflineRegion, SetCenterOptions, SetTiltOptions, SetViewportOptions, SetZoomLevelOptions, ShowOptions,
-  Viewport
+  Viewport, Feature, MapPoint
 } from "./mapbox.common";
 
 // Export the enums for devs not using TS
@@ -57,25 +57,25 @@ export class MapboxView extends MapboxViewBase {
 
       let drawMap = () => {
         this.mapView = new com.mapbox.mapboxsdk.maps.MapView(
-            this._context,
-            _getMapboxMapOptions(settings));
+          this._context,
+          _getMapboxMapOptions(settings));
 
         this.mapView.onCreate(null);
 
         this.mapView.getMapAsync(
-            new com.mapbox.mapboxsdk.maps.OnMapReadyCallback({
-              onMapReady: (mbMap) => {
-                this.mapView.mapboxMap = mbMap;
+          new com.mapbox.mapboxsdk.maps.OnMapReadyCallback({
+            onMapReady: (mbMap) => {
+              this.mapView.mapboxMap = mbMap;
 
-                if (settings.showUserLocation) {
-                  this.mapbox.requestFineLocationPermission().then(() => {
-                    _showLocation(this.mapView);
-                  });
-                }
-
-                this.notifyMapReady();
+              if (settings.showUserLocation) {
+                this.mapbox.requestFineLocationPermission().then(() => {
+                  _showLocation(this.mapView);
+                });
               }
-            })
+
+              this.notifyMapReady();
+            }
+          })
         );
         this.nativeView.addView(this.mapView);
       };
@@ -115,20 +115,20 @@ const _getMapboxMapOptions = (settings) => {
   const iconDrawable = android.support.v4.content.ContextCompat.getDrawable(application.android.context, identifier);
 
   const mapboxMapOptions = new com.mapbox.mapboxsdk.maps.MapboxMapOptions()
-      .styleUrl(_getMapStyle(settings.style))
-      .compassEnabled(!settings.hideCompass)
-      .rotateGesturesEnabled(!settings.disableRotation)
-      .scrollGesturesEnabled(!settings.disableScroll)
-      .tiltGesturesEnabled(!settings.disableTilt)
-      .zoomGesturesEnabled(!settings.disableZoom)
-      .attributionEnabled(!settings.hideAttribution)
-      .myLocationForegroundDrawable(iconDrawable)
-      // .myLocationBackgroundDrawable(iconDrawable)
-      .myLocationForegroundTintColor(android.graphics.Color.rgb(135, 206, 250)) // "lightskyblue"
-      // .myLocationBackgroundTintColor(android.graphics.Color.YELLOW)
-      .myLocationAccuracyTint(android.graphics.Color.rgb(135, 206, 250)) // "lightskyblue"
-      .myLocationAccuracyAlpha(80)
-      .logoEnabled(!settings.hideLogo);
+    .styleUrl(_getMapStyle(settings.style))
+    .compassEnabled(!settings.hideCompass)
+    .rotateGesturesEnabled(!settings.disableRotation)
+    .scrollGesturesEnabled(!settings.disableScroll)
+    .tiltGesturesEnabled(!settings.disableTilt)
+    .zoomGesturesEnabled(!settings.disableZoom)
+    .attributionEnabled(!settings.hideAttribution)
+    .myLocationForegroundDrawable(iconDrawable)
+    // .myLocationBackgroundDrawable(iconDrawable)
+    .myLocationForegroundTintColor(android.graphics.Color.rgb(135, 206, 250)) // "lightskyblue"
+    // .myLocationBackgroundTintColor(android.graphics.Color.YELLOW)
+    .myLocationAccuracyTint(android.graphics.Color.rgb(135, 206, 250)) // "lightskyblue"
+    .myLocationAccuracyAlpha(80)
+    .logoEnabled(!settings.hideLogo);
 
   // zoomlevel is not applied unless center is set
   if (settings.zoomLevel && !settings.center) {
@@ -141,8 +141,8 @@ const _getMapboxMapOptions = (settings) => {
 
   if (settings.center && settings.center.lat && settings.center.lng) {
     const cameraPositionBuilder = new com.mapbox.mapboxsdk.camera.CameraPosition.Builder()
-        .zoom(settings.zoomLevel)
-        .target(new com.mapbox.mapboxsdk.geometry.LatLng(settings.center.lat, settings.center.lng));
+      .zoom(settings.zoomLevel)
+      .target(new com.mapbox.mapboxsdk.geometry.LatLng(settings.center.lat, settings.center.lng));
     mapboxMapOptions.camera(cameraPositionBuilder.build());
   }
 
@@ -153,7 +153,7 @@ const _fineLocationPermissionGranted = () => {
   let hasPermission = android.os.Build.VERSION.SDK_INT < 23; // Android M. (6.0)
   if (!hasPermission) {
     hasPermission = android.content.pm.PackageManager.PERMISSION_GRANTED ===
-        android.support.v4.content.ContextCompat.checkSelfPermission(application.android.foregroundActivity, android.Manifest.permission.ACCESS_FINE_LOCATION);
+      android.support.v4.content.ContextCompat.checkSelfPermission(application.android.foregroundActivity, android.Manifest.permission.ACCESS_FINE_LOCATION);
   }
   return hasPermission;
 };
@@ -176,9 +176,9 @@ const _getClickedMarkerDetails = (clicked) => {
   for (let m in _markers) {
     let cached = _markers[m];
     if (cached.lat === clicked.getPosition().getLatitude() &&
-        cached.lng === clicked.getPosition().getLongitude() &&
-        cached.title === clicked.getTitle() &&
-        cached.subtitle === clicked.getSnippet()) {
+      cached.lng === clicked.getPosition().getLongitude() &&
+      cached.title === clicked.getTitle() &&
+      cached.subtitle === clicked.getSnippet()) {
       return cached;
     }
   }
@@ -194,14 +194,14 @@ const _downloadImage = (marker) => {
     }
     // ..or not to cache
     http.getImage(marker.icon).then(
-        (output) => {
-          marker.iconDownloaded = output.android;
-          _markerIconDownloadCache[marker.icon] = marker.iconDownloaded;
-          resolve(marker);
-        }, (e) => {
-          console.log(`Download failed for ' ${marker.icon}' with error: ${e}`);
-          resolve(marker);
-        });
+      (output) => {
+        marker.iconDownloaded = output.android;
+        _markerIconDownloadCache[marker.icon] = marker.iconDownloaded;
+        resolve(marker);
+      }, (e) => {
+        console.log(`Download failed for ' ${marker.icon}' with error: ${e}`);
+        resolve(marker);
+      });
   });
 };
 
@@ -239,27 +239,27 @@ const _addMarkers = (markers, nativeMap?) => {
   }
 
   theMap.mapboxMap.setOnMarkerClickListener(
-      new com.mapbox.mapboxsdk.maps.MapboxMap.OnMarkerClickListener({
-        onMarkerClick: (marker) => {
-          let cachedMarker = _getClickedMarkerDetails(marker);
-          if (cachedMarker && cachedMarker.onTap) {
-            cachedMarker.onTap(cachedMarker);
-          }
-          return false;
+    new com.mapbox.mapboxsdk.maps.MapboxMap.OnMarkerClickListener({
+      onMarkerClick: (marker) => {
+        let cachedMarker = _getClickedMarkerDetails(marker);
+        if (cachedMarker && cachedMarker.onTap) {
+          cachedMarker.onTap(cachedMarker);
         }
-      })
+        return false;
+      }
+    })
   );
 
   theMap.mapboxMap.setOnInfoWindowClickListener(
-      new com.mapbox.mapboxsdk.maps.MapboxMap.OnInfoWindowClickListener({
-        onInfoWindowClick: (marker) => {
-          let cachedMarker = _getClickedMarkerDetails(marker);
-          if (cachedMarker && cachedMarker.onCalloutTap) {
-            cachedMarker.onCalloutTap(cachedMarker);
-          }
-          return true;
+    new com.mapbox.mapboxsdk.maps.MapboxMap.OnInfoWindowClickListener({
+      onInfoWindowClick: (marker) => {
+        let cachedMarker = _getClickedMarkerDetails(marker);
+        if (cachedMarker && cachedMarker.onCalloutTap) {
+          cachedMarker.onCalloutTap(cachedMarker);
         }
-      })
+        return true;
+      }
+    })
   );
 
   const iconFactory = com.mapbox.mapboxsdk.annotations.IconFactory.getInstance(application.android.context);
@@ -371,9 +371,9 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
 
       // invoke the permission dialog
       android.support.v4.app.ActivityCompat.requestPermissions(
-          application.android.foregroundActivity,
-          [android.Manifest.permission.ACCESS_FINE_LOCATION],
-          ACCESS_FINE_LOCATION_PERMISSION_REQUEST_CODE);
+        application.android.foregroundActivity,
+        [android.Manifest.permission.ACCESS_FINE_LOCATION],
+        ACCESS_FINE_LOCATION_PERMISSION_REQUEST_CODE);
     });
   }
 
@@ -402,46 +402,46 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
           let mapboxMapOptions = _getMapboxMapOptions(settings);
 
           _mapbox.mapView = new com.mapbox.mapboxsdk.maps.MapView(
-              application.android.context,
-              mapboxMapOptions);
+            application.android.context,
+            mapboxMapOptions);
 
           _mapbox.mapView.onCreate(null);
 
           _mapbox.mapView.getMapAsync(
-              new com.mapbox.mapboxsdk.maps.OnMapReadyCallback({
-                onMapReady: (mbMap) => {
-                  _mapbox.mapboxMap = mbMap;
-                  _mapbox.mapView.mapboxMap = mbMap;
-                  // mapboxMap.setStyleUrl(mapbox._getMapStyle(settings.style));
-                  // mapboxMap.setStyleUrl(com.mapbox.mapboxsdk.constants.Style.DARK);
+            new com.mapbox.mapboxsdk.maps.OnMapReadyCallback({
+              onMapReady: (mbMap) => {
+                _mapbox.mapboxMap = mbMap;
+                _mapbox.mapView.mapboxMap = mbMap;
+                // mapboxMap.setStyleUrl(mapbox._getMapStyle(settings.style));
+                // mapboxMap.setStyleUrl(com.mapbox.mapboxsdk.constants.Style.DARK);
 
-                  _polylines = [];
-                  _markers = [];
-                  _addMarkers(settings.markers, _mapbox.mapView);
+                _polylines = [];
+                _markers = [];
+                _addMarkers(settings.markers, _mapbox.mapView);
 
-                  if (settings.showUserLocation) {
-                    this.requestFineLocationPermission().then((granted: boolean) => {
-                      _showLocation(_mapbox.mapView);
-                    });
-                  }
-                  resolve();
+                if (settings.showUserLocation) {
+                  this.requestFineLocationPermission().then((granted: boolean) => {
+                    _showLocation(_mapbox.mapView);
+                  });
                 }
-              })
+                resolve();
+              }
+            })
           );
 
           // mapView.onResume();
 
           const topMostFrame = frame.topmost(),
-              context = application.android.currentContext,
-              mapViewLayout = new android.widget.FrameLayout(context),
-              density = utils.layout.getDisplayDensity(),
-              left = settings.margins.left * density,
-              right = settings.margins.right * density,
-              top = settings.margins.top * density,
-              bottom = settings.margins.bottom * density,
-              viewWidth = topMostFrame.currentPage.android.getWidth(),
-              viewHeight = topMostFrame.currentPage.android.getHeight(),
-              params = new android.widget.FrameLayout.LayoutParams(viewWidth - left - right, viewHeight - top - bottom);
+            context = application.android.currentContext,
+            mapViewLayout = new android.widget.FrameLayout(context),
+            density = utils.layout.getDisplayDensity(),
+            left = settings.margins.left * density,
+            right = settings.margins.right * density,
+            top = settings.margins.top * density,
+            bottom = settings.margins.bottom * density,
+            viewWidth = topMostFrame.currentPage.android.getWidth(),
+            viewHeight = topMostFrame.currentPage.android.getHeight(),
+            params = new android.widget.FrameLayout.LayoutParams(viewWidth - left - right, viewHeight - top - bottom);
 
           params.setMargins(left, top, right, bottom);
           _mapbox.mapView.setLayoutParams(params);
@@ -555,14 +555,14 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
       try {
         const theMap = nativeMap || _mapbox;
         const cameraPosition = new com.mapbox.mapboxsdk.camera.CameraPosition.Builder()
-            .target(new com.mapbox.mapboxsdk.geometry.LatLng(options.lat, options.lng))
-            .build();
+          .target(new com.mapbox.mapboxsdk.geometry.LatLng(options.lat, options.lng))
+          .build();
 
         if (options.animated === true) {
           theMap.mapboxMap.animateCamera(
-              com.mapbox.mapboxsdk.camera.CameraUpdateFactory.newCameraPosition(cameraPosition),
-              1000,
-              null);
+            com.mapbox.mapboxsdk.camera.CameraUpdateFactory.newCameraPosition(cameraPosition),
+            1000,
+            null);
         } else {
           theMap.mapboxMap.setCameraPosition(cameraPosition);
         }
@@ -637,7 +637,7 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
         const tilt = options.tilt ? options.tilt : 30;
 
         const cameraPositionBuilder = new com.mapbox.mapboxsdk.camera.CameraPosition.Builder()
-            .tilt(tilt);
+          .tilt(tilt);
 
         const cameraUpdate = com.mapbox.mapboxsdk.camera.CameraUpdateFactory.newCameraPosition(cameraPositionBuilder.build());
         const durationMs = options.duration ? options.duration : 5000;
@@ -751,7 +751,7 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
         }
 
         const cameraPositionBuilder = new com.mapbox.mapboxsdk.camera.CameraPosition.Builder()
-            .target(new com.mapbox.mapboxsdk.geometry.LatLng(target.lat, target.lng));
+          .target(new com.mapbox.mapboxsdk.geometry.LatLng(target.lat, target.lng));
 
         if (options.bearing) {
           cameraPositionBuilder.bearing(options.bearing);
@@ -768,9 +768,9 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
         const durationMs = options.duration ? options.duration : 10000;
 
         theMap.mapboxMap.animateCamera(
-            com.mapbox.mapboxsdk.camera.CameraUpdateFactory.newCameraPosition(cameraPositionBuilder.build()),
-            durationMs,
-            null);
+          com.mapbox.mapboxsdk.camera.CameraUpdateFactory.newCameraPosition(cameraPositionBuilder.build()),
+          durationMs,
+          null);
 
         setTimeout(() => {
           resolve();
@@ -793,14 +793,14 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
         }
 
         theMap.mapboxMap.setOnMapClickListener(
-            new com.mapbox.mapboxsdk.maps.MapboxMap.OnMapClickListener({
-              onMapClick: (point) => {
-                listener({
-                  lat: point.getLatitude(),
-                  lng: point.getLongitude()
-                });
-              }
-            })
+          new com.mapbox.mapboxsdk.maps.MapboxMap.OnMapClickListener({
+            onMapClick: (point) => {
+              listener({
+                lat: point.getLatitude(),
+                lng: point.getLongitude()
+              });
+            }
+          })
         );
 
         resolve();
@@ -850,17 +850,17 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
         }
 
         const bounds = new com.mapbox.mapboxsdk.geometry.LatLngBounds.Builder()
-            .include(new com.mapbox.mapboxsdk.geometry.LatLng(options.bounds.north, options.bounds.east))
-            .include(new com.mapbox.mapboxsdk.geometry.LatLng(options.bounds.south, options.bounds.west))
-            .build();
+          .include(new com.mapbox.mapboxsdk.geometry.LatLng(options.bounds.north, options.bounds.east))
+          .include(new com.mapbox.mapboxsdk.geometry.LatLng(options.bounds.south, options.bounds.west))
+          .build();
 
         const padding = 25,
-            animated = options.animated === undefined || options.animated,
-            durationMs = animated ? 1000 : 0;
+          animated = options.animated === undefined || options.animated,
+          durationMs = animated ? 1000 : 0;
 
         theMap.mapboxMap.easeCamera(
-            com.mapbox.mapboxsdk.camera.CameraUpdateFactory.newLatLngBounds(bounds, padding),
-            durationMs);
+          com.mapbox.mapboxsdk.camera.CameraUpdateFactory.newLatLngBounds(bounds, padding),
+          durationMs);
 
         setTimeout(() => {
           resolve();
@@ -878,18 +878,18 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
         const styleURL = _getMapStyle(options.style);
 
         const bounds = new com.mapbox.mapboxsdk.geometry.LatLngBounds.Builder()
-            .include(new com.mapbox.mapboxsdk.geometry.LatLng(options.bounds.north, options.bounds.east))
-            .include(new com.mapbox.mapboxsdk.geometry.LatLng(options.bounds.south, options.bounds.west))
-            .build();
+          .include(new com.mapbox.mapboxsdk.geometry.LatLng(options.bounds.north, options.bounds.east))
+          .include(new com.mapbox.mapboxsdk.geometry.LatLng(options.bounds.south, options.bounds.west))
+          .build();
 
         const retinaFactor = utils.layout.getDisplayDensity();
 
         const offlineRegionDefinition = new com.mapbox.mapboxsdk.offline.OfflineTilePyramidRegionDefinition(
-            styleURL,
-            bounds,
-            options.minZoom,
-            options.maxZoom,
-            retinaFactor);
+          styleURL,
+          bounds,
+          options.minZoom,
+          options.maxZoom,
+          retinaFactor);
 
         const info = '{name:"' + options.name + '"}';
         const infoStr = new java.lang.String(info);
@@ -917,8 +917,8 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
               onStatusChanged: (status) => {
                 // Calculate the download percentage and update the progress bar
                 let percentage = status.getRequiredResourceCount() >= 0 ?
-                    (100.0 * status.getCompletedResourceCount() / status.getRequiredResourceCount()) :
-                    0.0;
+                  (100.0 * status.getCompletedResourceCount() / status.getRequiredResourceCount()) :
+                  0.0;
 
                 if (options.onProgress) {
                   options.onProgress({
@@ -1049,13 +1049,13 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
         const theMap = nativeMap || _mapbox;
 
         theMap.mapboxMap.addSource(
-            new com.mapbox.mapboxsdk.style.sources.GeoJsonSource(options.name,
-                new java.net.URL(options.data),
-                new com.mapbox.mapboxsdk.style.sources.GeoJsonOptions()
-                    .withCluster(true)
-                    .withClusterMaxZoom(options.clusterMaxZoom || 13)
-                    .withClusterRadius(options.clusterRadius || 40)
-            )
+          new com.mapbox.mapboxsdk.style.sources.GeoJsonSource(options.name,
+            new java.net.URL(options.data),
+            new com.mapbox.mapboxsdk.style.sources.GeoJsonOptions()
+              .withCluster(true)
+              .withClusterMaxZoom(options.clusterMaxZoom || 13)
+              .withClusterRadius(options.clusterRadius || 40)
+          )
         );
 
         const layers = [];
@@ -1084,17 +1084,17 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
           // Add some nice circles
           const circles = new com.mapbox.mapboxsdk.style.layers.CircleLayer("cluster-" + i, "earthquakes");
           circles.setProperties([
-                // com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconImage("icon")
-                com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleColor(layers[i][1]),
-                com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleRadius(new java.lang.Float(22.0)),
-                com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleBlur(new java.lang.Float(0.2))
-              ]
+            // com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconImage("icon")
+            com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleColor(layers[i][1]),
+            com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleRadius(new java.lang.Float(22.0)),
+            com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleBlur(new java.lang.Float(0.2))
+          ]
           );
 
           circles.setFilter(
-              i === 0
-                  ? com.mapbox.mapboxsdk.style.layers.Filter.gte("point_count", new java.lang.Integer(layers[i][0]))
-                  : com.mapbox.mapboxsdk.style.layers.Filter.all([
+            i === 0
+              ? com.mapbox.mapboxsdk.style.layers.Filter.gte("point_count", new java.lang.Integer(layers[i][0]))
+              : com.mapbox.mapboxsdk.style.layers.Filter.all([
                 com.mapbox.mapboxsdk.style.layers.Filter.gte("point_count", new java.lang.Integer(layers[i][0])),
                 com.mapbox.mapboxsdk.style.layers.Filter.lt("point_count", new java.lang.Integer(layers[i - 1][0]))
               ])
@@ -1106,10 +1106,10 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
         // Add the count labels
         const count = new com.mapbox.mapboxsdk.style.layers.SymbolLayer("count", "earthquakes");
         count.setProperties([
-              com.mapbox.mapboxsdk.style.layers.PropertyFactory.textField("{point_count}"),
-              com.mapbox.mapboxsdk.style.layers.PropertyFactory.textSize(new java.lang.Float(12.0)),
-              com.mapbox.mapboxsdk.style.layers.PropertyFactory.textColor(new Color("white").android)
-            ]
+          com.mapbox.mapboxsdk.style.layers.PropertyFactory.textField("{point_count}"),
+          com.mapbox.mapboxsdk.style.layers.PropertyFactory.textSize(new java.lang.Float(12.0)),
+          com.mapbox.mapboxsdk.style.layers.PropertyFactory.textColor(new Color("white").android)
+        ]
         );
         theMap.mapboxMap.addLayer(count);
 
@@ -1120,6 +1120,62 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
       }
     });
   }
+
+  getFeaturesAtPoint(data: MapPoint, layers: string[], nativeMap?): Feature[] {
+    const theMap = nativeMap || _mapbox;
+    let point: android.graphics.PointF = new android.graphics.PointF();
+    point.x = data.x;
+    point.y = data.y;
+
+    var results: any = theMap.mapboxMap.queryRenderedFeatures(point, layers);
+    var features: Feature[] = [];
+
+    for (var idx = 0; idx < results.size(); idx++)
+      features.push(JSON.parse(results.get(idx).toJson()));
+
+    return features;
+  }
+
+  getFeaturesAtLatLng(data: LatLng, layers: string[], nativeMap?): Feature[] {
+    const theMap = nativeMap || _mapbox;
+    let coordinate: any = new com.mapbox.mapboxsdk.geometry.LatLng(data.lat, data.lng);
+    let point: android.graphics.PointF = theMap.mapboxMap.getProjection().toScreenLocation(coordinate);
+
+    return this.getFeaturesAtPoint(point as MapPoint, layers, nativeMap);
+  }
+
+  getFeaturesInPointRect(northeast: MapPoint, southwest: MapPoint, layers: string[], nativeMap?): Feature[] {
+    const theMap = nativeMap || _mapbox;
+    let rect: android.graphics.RectF = new android.graphics.RectF(northeast.x, northeast.y, southwest.x, southwest.y);
+    var results: any = theMap.mapboxMap.queryRenderedFeatures(rect, layers);
+    var features: Feature[] = [];
+
+    for (var idx = 0; idx < results.size(); idx++)
+      features.push(JSON.parse(results.get(idx).toJson()));
+
+    return features;
+  }
+  getFeaturesInLatLngRect(northeast: LatLng, southwest: LatLng, layers: string[], nativeMap?): Feature[] {
+    const theMap = nativeMap || _mapbox;
+    let neCoordinate: any = new com.mapbox.mapboxsdk.geometry.LatLng(northeast.lat, northeast.lng);
+    let swCoordinate: any = new com.mapbox.mapboxsdk.geometry.LatLng(southwest.lat, southwest.lng);
+
+    let nePoint: MapPoint = theMap.mapboxMap.getProjection().toScreenLocation(neCoordinate);
+    let swPoint: MapPoint = theMap.mapboxMap.getProjection().toScreenLocation(swCoordinate);
+
+    return this.getFeaturesInPointRect(nePoint, swPoint, layers, nativeMap);
+  }
+  getFeaturesInViewport(layers: string[], nativeMap?): Feature[] {
+    const theMap = nativeMap || _mapbox;
+    const bounds = theMap.mapboxMap.getProjection().getVisibleRegion().latLngBounds;
+    let neCoordinate: LatLng = { lat: bounds.getLatNorth(), lng: bounds.getLonEast() };
+    let swCoordinate: LatLng = { lat: bounds.getLatSouth(), lng: bounds.getLonWest() };
+
+    return this.getFeaturesInLatLngRect(neCoordinate, swCoordinate, layers, nativeMap);
+
+  }
+
+
 
   private static getAndroidColor(color: string | Color): any {
     let androidColor;
