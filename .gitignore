@@ -12,3 +12,4 @@ demo/lib
 demo/platforms
 node_modules
 publish/*.tgz
+publish/package/*.tgz

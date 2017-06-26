@@ -172,7 +172,7 @@ export interface DownloadOfflineRegionOptions extends OfflineRegion {
 export interface Feature {
   id:number;
   type:string;
-  properties:any[];
+  properties:any;
   geometry:GeometryShape;
 }
 
