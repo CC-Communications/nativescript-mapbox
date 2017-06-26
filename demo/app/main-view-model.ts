@@ -562,7 +562,20 @@ export class HelloWorldModel extends Observable {
       view = e.view as MapboxView;
       var point = e.ios.locationInView(e.view.nativeView);
       var features = view.getFeaturesAtPoint(point, ["departments"]);
-      console.dir(features);
+      if (features)
+        features.forEach((f) => {
+          console.dir(f);
+          console.dir(f.properties);
+        });
+
+      if (features && features.length > 0) {
+        var viewportFeatures = view.getFeaturesInViewport(["departments"]);
+        if (viewportFeatures)
+          viewportFeatures.forEach((f) => {
+            console.dir(f);
+            console.dir(f.properties);
+          });
+      }
     }
     else {
       console.error("We expected Android to call the click handler setup in onMapReady");

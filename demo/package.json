@@ -3,10 +3,13 @@
     "id": "org.nativescript.mapbox",
     "tns-android": {
       "version": "3.0.1"
+    },
+    "tns-ios": {
+      "version": "3.0.1"
     }
   },
   "dependencies": {
-    "nativescript-mapbox": "file:///C:\\src\\nativescript-mapbox\\src",
+    "nativescript-mapbox": "file:///Users/jonaustin/src/nativescript-mapbox/src",
     "nativescript-unit-test-runner": "^0.3.0",
     "tns-core-modules": "^3.0.1"
   },
