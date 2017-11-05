@@ -298,74 +298,74 @@ export class HelloWorldModel extends Observable {
                 console.log("mapbox doDownloadCurrentViewportAsOfflineRegion error: " + error);
               }
           );
-        },
-        (error: string) => {
-          let alertOptions: AlertOptions = {
-            title: "Download error",
-            message: error,
-            okButtonText: "Got it"
-          };
-          alert(alertOptions);
-        });
+      },
+      (error: string) => {
+        let alertOptions: AlertOptions = {
+          title: "Download error",
+          message: error,
+          okButtonText: "Got it"
+        };
+        alert(alertOptions);
+      });
   }
 
   public doAddAndClusterGeoJSON(): void {
     this.mapbox.addGeoJsonClustered(
-        {
-          name: "earthquakes",
-          data: "https://www.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson",
-          clusterMaxZoom: 15,
-          clusterRadius: 20
-          // clusters: [
-          //   {}
-          // ]
-        }
+      {
+        name: "earthquakes",
+        data: "https://www.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson",
+        clusterMaxZoom: 15,
+        clusterRadius: 20
+        // clusters: [
+        //   {}
+        // ]
+      }
     ).then(
-        () => {
-          let alertOptions: AlertOptions = {
-            title: "GeoJSON added",
-            message: "Moving to the USA as that's where the GeoJson data is drawn",
-            okButtonText: "OK"
-          };
-          alert(alertOptions).then(
-              () => {
-                this.mapbox.setViewport(
-                    {
-                      animated: true,
-                      bounds: {
-                        north: 52.9,
-                        east: -62.2,
-                        south: 22.1,
-                        west: -128.2
-                      }
-                    }
-                );
-              });
-        },
-        (error: string) => {
-          console.log("mapbox doAddAndClusterGeoJSON error: " + error);
-        }
-    );
+      () => {
+        let alertOptions: AlertOptions = {
+          title: "GeoJSON added",
+          message: "Moving to the USA as that's where the GeoJson data is drawn",
+          okButtonText: "OK"
+        };
+        alert(alertOptions).then(
+          () => {
+            this.mapbox.setViewport(
+              {
+                animated: true,
+                bounds: {
+                  north: 52.9,
+                  east: -62.2,
+                  south: 22.1,
+                  west: -128.2
+                }
+              }
+            );
+          });
+      },
+      (error: string) => {
+        console.log("mapbox doAddAndClusterGeoJSON error: " + error);
+      }
+      );
   }
 
   public doListOfflineRegions(): void {
     this.mapbox.listOfflineRegions().then(
-        (regions: Array<OfflineRegion>) => {
-          let alertOptions: AlertOptions = {
-            title: "Offline regions",
-            message: JSON.stringify(regions),
-            okButtonText: "Thanks"
-          };
-          alert(alertOptions);
-        },
-        (error: string) => {
-          let alertOptions: AlertOptions = {
-            title: "Offline regions list error",
-            message: error,
-            okButtonText: "Hmm"
-          };
-          alert(alertOptions);
-        }
+      (regions: Array<OfflineRegion>) => {
+        let alertOptions: AlertOptions = {
+          title: "Offline regions",
+          message: JSON.stringify(regions),
+          okButtonText: "Thanks"
+        };
+        alert(alertOptions);
+      },
+      (error: string) => {
+        let alertOptions: AlertOptions = {
+          title: "Offline regions list error",
+          message: error,
+          okButtonText: "Hmm"
+        };
+        alert(alertOptions);
+      }
     );
   }
 
@@ -644,3 +644,4 @@ export class HelloWorldModel extends Observable {
     console.log("clicked");
   }
 }
+==== BASE ====

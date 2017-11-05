@@ -13,7 +13,6 @@
         </TabViewItem.view>
       </TabViewItem>
 
-     
       <TabViewItem title="By XML - Depts">
         <TabViewItem.view>
           <ContentView>
@@ -36,7 +35,7 @@
 <!--
       <TabViewItem title="By Code">
         <TabViewItem.view>
-          <GridLayout columns="*, *, *, *" rows="auto, auto, auto, auto, auto, auto, auto, auto, auto, auto, auto" horizontalAlignment="stretch" class="tab-content">
+          <GridLayout columns="*, *, *, *" rows="auto, auto, auto, auto, auto, auto, auto, auto, auto, auto" horizontalAlignment="stretch" class="tab-content">
 
             <Button row="0" col="0" text="show" tap="{{ doShow }}" class="button" />
             <Button row="0" col="1"  text="hide" tap="{{ doHide }}" class="button" />

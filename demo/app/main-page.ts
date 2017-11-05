@@ -73,10 +73,11 @@ function onMapReady(args) {
         }
     );*/
   }, 3000);
+
 /*
   setTimeout(() => {
-    map.setMapStyle(MapStyle.TRAFFIC_NIGHT);
-  }, 6000);
+    map.setMapStyle(MapStyle.DARK);
+  }, 5000);
 
   setTimeout(() => {
     map.addPolyline({
@@ -126,20 +127,8 @@ function onMapReady(args) {
   }, 21000);
 
   // setTimeout(() => {
-  //   map.animateCamera({
-  //     target: {
-  //       lat: 51.8,
-  //       lng: 5
-  //     },
-  //     tilt: 20,
-  //     zoomLevel: 8,
-  //     duration: 6000
-  //   });
-  // }, 14000);
-
-  setTimeout(() => {
-    map.removePolylines([10]);
-  }, 24000);*/
+  //   map.removePolylines([10]);
+  // }, 15000);*/
 }
 
 exports.onMapReady = onMapReady;
