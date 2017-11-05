@@ -26,6 +26,7 @@ function onMapReady(args) {
     console.log(">> latLng clicked = " + JSON.stringify(latLng));
   }));
 
+  /*
   // .. or use the convenience methods exposed on args.map, for instance:
   map.addMarkers([
     {
@@ -43,7 +44,7 @@ function onMapReady(args) {
       }
     }]
   );
-
+*/
   setTimeout(() => {
     map.setOnMapClickListener((point: LatLng) => {
       console.log(`Map clicked: ${JSON.stringify(point)}`);
@@ -72,7 +73,6 @@ function onMapReady(args) {
         }
     );*/
   }, 3000);
-
 /*
   setTimeout(() => {
     map.setMapStyle(MapStyle.TRAFFIC_NIGHT);
@@ -139,7 +139,7 @@ function onMapReady(args) {
 
   setTimeout(() => {
     map.removePolylines([10]);
-  }, 24000);
+  }, 24000);*/
 }
 
 exports.onMapReady = onMapReady;

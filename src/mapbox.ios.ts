@@ -11,9 +11,7 @@ import {
   MapboxCommon,
   MapboxViewBase,
   MapStyle, OfflineRegion, SetCenterOptions, SetTiltOptions, SetViewportOptions, SetZoomLevelOptions, ShowOptions,
-==== BASE ====
   Viewport, Feature, MapPoint, AddExtrusionOptions
-==== BASE ====
 } from "./mapbox.common";
 import { Color } from "tns-core-modules/color";
 

@@ -3,7 +3,7 @@ import { Color } from "tns-core-modules/color";
 import { alert, AlertOptions } from "tns-core-modules/ui/dialogs";
 import * as platform from "tns-core-modules/platform";
 import { Mapbox, MapboxView, MapStyle, OfflineRegion, LatLng, Viewport, DownloadProgress, MapboxMarker } from "nativescript-mapbox";
-import { GestureEventData } from "ui/gestures";
+import { GestureEventData } from "tns-core-modules/ui/gestures";
 
 const isIOS = platform.device.os === platform.platformNames.ios;
 const ACCESS_TOKEN = "sk.eyJ1IjoiZWRkeXZlcmJydWdnZW4iLCJhIjoia1JpRW82NCJ9.OgnvpsKzB3GJhzyofQNUBw";

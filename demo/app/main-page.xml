@@ -13,81 +13,22 @@
         </TabViewItem.view>
       </TabViewItem>
 
+     
       <TabViewItem title="By XML - Depts">
         <TabViewItem.view>
-==== BASE ====
-          <GridLayout columns="*, *" rows="120, *, 120" horizontalAlignment="stretch" class="tab-content">
-            <ContentView row="0">
-              <map:MapboxView
-                  latitude="52.3702160"
-                  longitude="4.8951680"
-                  zoomLevel="3"
-                  mapStyle="light"
-                  hideAttribution="true"
-                  showUserLocation="true"
-                  hideCompass="false"
-                  accessToken="sk.eyJ1IjoiZWRkeXZlcmJydWdnZW4iLCJhIjoia1JpRW82NCJ9.OgnvpsKzB3GJhzyofQNUBw">
-              </map:MapboxView>
-            </ContentView>
-            <ContentView row="0" col="1">
-              <map:MapboxView
-                  delay="invalid"
-                  latitude="52.3702160"
-                  longitude="4.8951680"
-==== BASE ====
-                  zoomLevel="6"
-==== BASE ====
-                  mapStyle="dark"
-                  hideAttribution="true"
-                  hideLogo="true"
-                  hideCompass="true"
-                  accessToken="sk.eyJ1IjoiZWRkeXZlcmJydWdnZW4iLCJhIjoia1JpRW82NCJ9.OgnvpsKzB3GJhzyofQNUBw">
-              </map:MapboxView>
-            </ContentView>
-            <ContentView row="1" colSpan="2">
-              <map:MapboxView
-                  delay="3000"
-                  latitude="52.3702160"
-                  longitude="4.8951680"
-                  zoomLevel="7"
-                  mapStyle="satellite"
-                  mapReady="onMapReady"
-                  locationPermissionGranted="onLocationPermissionGranted"
-                  showUserLocation="true"
-                  hideLogo="true"
-                  hideCompass="true"
-                  hideAttribution="true"
-                  accessToken="sk.eyJ1IjoiZWRkeXZlcmJydWdnZW4iLCJhIjoia1JpRW82NCJ9.OgnvpsKzB3GJhzyofQNUBw">
-              </map:MapboxView>
-            </ContentView>
-            <ContentView row="2">
-              <map:MapboxView
-                  delay="6000"
-                  latitude="52.3702160"
-                  longitude="4.8951680"
-                  zoomLevel="12"
-                  mapStyle="streets"
-                  hideAttribution="true"
-                  accessToken="sk.eyJ1IjoiZWRkeXZlcmJydWdnZW4iLCJhIjoia1JpRW82NCJ9.OgnvpsKzB3GJhzyofQNUBw">
-              </map:MapboxView>
-            </ContentView>
-            <ContentView row="2" col="1">
-              <map:MapboxView
-                  delay="8000"
-                  latitude="52.3702160"
-                  longitude="4.8951680"
-                  zoomLevel="13"
-                  disableZoom="true"
-                  disableRotation="true"
-                  disableScroll="true"
-                  disableTilt="true"
-==== BASE ====
+          <ContentView>
+         <map:MapboxView
+                  id="testmap"
+                  latitude="39.8282"
+                  longitude="-98.5795"
+                  zoomLevel="1"
+                  tap="{{ onMapClick }}"
+                  mapStyle=""
+                  hideAttribution="false"
                   showUserLocation="false"
-==== BASE ====
-                  hideAttribution="true"
-                  mapStyle="hybrid"
-                  accessToken="sk.eyJ1IjoiZWRkeXZlcmJydWdnZW4iLCJhIjoia1JpRW82NCJ9.OgnvpsKzB3GJhzyofQNUBw">
-==== BASE ====
+                  hideCompass="false"
+                  mapReady="onMapReady"
+                  accessToken="">
               </map:MapboxView>
               </ContentView>
         </TabViewItem.view>
