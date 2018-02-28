@@ -2,7 +2,7 @@ import { Observable } from "tns-core-modules/data/observable";
 import { Color } from "tns-core-modules/color";
 import { alert, AlertOptions } from "tns-core-modules/ui/dialogs";
 import * as platform from "tns-core-modules/platform";
-import { Mapbox, MapboxView, MapStyle, OfflineRegion, LatLng, Viewport, DownloadProgress, MapboxMarker } from "nativescript-mapbox";
+import { Mapbox, MapStyle, OfflineRegion, LatLng, Viewport, DownloadProgress, MapboxMarker } from "nativescript-mapbox";
 import { GestureEventData } from "tns-core-modules/ui/gestures";
 
 const isIOS = platform.device.os === platform.platformNames.ios;
@@ -23,7 +23,7 @@ export class HelloWorldModel extends Observable {
       margins: {
         left: 18,
         right: 18,
-        top: isIOS ? 360 : 424,
+        top: isIOS ? 384 : 424,
         bottom: isIOS ? 50 : 8
       },
       center: {
@@ -58,9 +58,19 @@ export class HelloWorldModel extends Observable {
     }).then(
         (showResult) => {
           console.log(`Mapbox show done for ${showResult.ios ? "iOS" : "Android"}, native object received: ${showResult.ios ? showResult.ios : showResult.android}`);
-          this.mapbox.setOnMapClickListener((latLng => {
-            console.log(">> latLng clicked: " + JSON.stringify(latLng));
-          }));
+
+          this.mapbox.setOnMapClickListener(point => {
+            console.log(`>> Map clicked: ${JSON.stringify(point)}`);
+          });
+
+          this.mapbox.setOnScrollListener((point?: LatLng) => {
+            // note that only iOS returns the point
+            console.log(`>> Map scrolled: ${JSON.stringify(point)}`);
+          });
+
+          this.mapbox.setOnFlingListener(() => {
+            console.log(`>> Map flinged"}`);
+          }).catch(err => console.log(err));
         },
         (error: string) => {
           console.log("mapbox show error: " + error);
@@ -144,6 +154,7 @@ export class HelloWorldModel extends Observable {
         title: 'One-line title here', // no popup unless set
         subtitle: 'With a res://icon-40 image',
         icon: isIOS ? 'res://icon-40' : 'res://icon',
+        selected: false,
         onTap: onTap,
         onCalloutTap: onCalloutTap
       },
@@ -152,11 +163,8 @@ export class HelloWorldModel extends Observable {
         id: 3,
         lat: 52.3602160,
         lng: 5,
-        title: 'One-line title here 2', // no popup unless set
-        subtitle: 'And a one-liner here as well.',
-        icon: 'http://www.bme.be/wp-content/uploads/2014/04/marker.png',
-        onTap: onTap,
-        onCalloutTap: onCalloutTap
+        onTap: () => console.log("Titleless marker tapped!"),
+        icon: 'http://www.bme.be/wp-content/uploads/2014/04/marker.png'
       },
       {
         id: 4,
@@ -165,6 +173,7 @@ export class HelloWorldModel extends Observable {
         title: 'One-line title here 3', // no popup unless set
         subtitle: 'And a one-liner here as well.',
         iconPath: 'res/markers/home_marker.png',
+        selected: true,
         onTap: onTap,
         onCalloutTap: onCalloutTap
       },
@@ -175,20 +184,12 @@ export class HelloWorldModel extends Observable {
         title: 'This title is cut off on iOS, but multi-line on Android', // no popup unless set
         subtitle: 'Same for this subtitle. Same for this subtitle. Same for this subtitle. Same for this subtitle. Same for this subtitle.',
         icon: 'http://maryjanewa.com/wp-content/uploads/2016/01/map-marker.png',
-        onTap: () => {
-          console.log("Marker tapped");
-        },
-        onCalloutTap: () => {
-          console.log("Marker callout tapped");
-        }
+        onTap: () => console.log("Marker tapped"),
+        onCalloutTap: () => console.log("Marker callout tapped")
       }
     ]).then(
-        () => {
-          console.log("Mapbox addMarkers done");
-        },
-        (error: string) => {
-          console.log("mapbox addMarkers error: " + error);
-        }
+        () => console.log("Mapbox addMarkers done"),
+        (error: string) => console.log("mapbox addMarkers error: " + error)
     );
   }
 
@@ -202,9 +203,7 @@ export class HelloWorldModel extends Observable {
           };
           alert(alertOptions);
         },
-        (error: string) => {
-          console.log("mapbox doGetViewport error: " + error);
-        }
+        (error: string) => console.log("mapbox doGetViewport error: " + error)
     );
   }
 
@@ -349,23 +348,25 @@ export class HelloWorldModel extends Observable {
   }
 
   public doListOfflineRegions(): void {
-    this.mapbox.listOfflineRegions().then(
-      (regions: Array<OfflineRegion>) => {
-        let alertOptions: AlertOptions = {
-          title: "Offline regions",
-          message: JSON.stringify(regions),
-          okButtonText: "Thanks"
-        };
-        alert(alertOptions);
-      },
-      (error: string) => {
-        let alertOptions: AlertOptions = {
-          title: "Offline regions list error",
-          message: error,
-          okButtonText: "Hmm"
-        };
-        alert(alertOptions);
-      }
+    this.mapbox.listOfflineRegions({
+      accessToken: ACCESS_TOKEN
+    }).then(
+        (regions: Array<OfflineRegion>) => {
+          let alertOptions: AlertOptions = {
+            title: "Offline regions",
+            message: JSON.stringify(regions),
+            okButtonText: "Thanks"
+          };
+          alert(alertOptions);
+        },
+        (error: string) => {
+          let alertOptions: AlertOptions = {
+            title: "Offline regions list error",
+            message: error,
+            okButtonText: "Hmm"
+          };
+          alert(alertOptions);
+        }
     );
   }
 
@@ -373,37 +374,53 @@ export class HelloWorldModel extends Observable {
     this.mapbox.deleteOfflineRegion({
       name: "Amsterdam"
     }).then(
-      () => {
-        let alertOptions: AlertOptions = {
-          title: "Offline region deleted",
-          okButtonText: "Cool"
-        };
-        alert(alertOptions);
-      },
-      (error: string) => {
-        let alertOptions: AlertOptions = {
-          title: "Error deleting offline region",
-          message: error,
-          okButtonText: "Hmmz"
-        };
-        alert(alertOptions);
-      }
-      );
+        () => {
+          let alertOptions: AlertOptions = {
+            title: "Offline region deleted",
+            okButtonText: "Cool"
+          };
+          alert(alertOptions);
+        },
+        (error: string) => {
+          let alertOptions: AlertOptions = {
+            title: "Error deleting offline region",
+            message: error,
+            okButtonText: "Hmmz"
+          };
+          alert(alertOptions);
+        }
+    );
   }
 
   public doGetTilt(): void {
     this.mapbox.getTilt().then(
-      (result: number) => {
-        let alertOptions: AlertOptions = {
-          title: "Tilt / pitch",
-          message: "" + result,
-          okButtonText: "OK"
-        };
-        alert(alertOptions);
-      },
-      (error: string) => {
-        console.log("mapbox getTilt error: " + error);
-      }
+        (result: number) => {
+          let alertOptions: AlertOptions = {
+            title: "Tilt / pitch",
+            message: "" + result,
+            okButtonText: "OK"
+          };
+          alert(alertOptions);
+        },
+        (error: string) => {
+          console.log("mapbox getTilt error: " + error);
+        }
+    );
+  }
+
+  public doGetUserLocation(): void {
+    this.mapbox.getUserLocation().then(
+        location => {
+          let alertOptions: AlertOptions = {
+            title: "User location",
+            message: JSON.stringify(location),
+            okButtonText: "Thanks!"
+          };
+          alert(alertOptions);
+        },
+        (error: string) => {
+          console.log("mapbox getUserLocation error: " + error);
+        }
     );
   }
 
@@ -644,4 +661,3 @@ export class HelloWorldModel extends Observable {
     console.log("clicked");
   }
 }
-==== BASE ====

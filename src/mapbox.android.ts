@@ -13,7 +13,7 @@ import {
   MapboxCommon,
   MapboxViewBase,
   MapStyle, OfflineRegion, SetCenterOptions, SetTiltOptions, SetViewportOptions, SetZoomLevelOptions, ShowOptions,
-  Viewport, Feature, MapPoint, AddExtrusionOptions
+  Viewport, AddExtrusionOptions, UserLocation, ListOfflineRegionsOptions, Feature, MapPoint
 } from "./mapbox.common";
 
 // Export the enums for devs not using TS
@@ -26,9 +26,9 @@ let _accessToken: string;
 let _markers = [];
 let _polylines = [];
 let _markerIconDownloadCache = [];
-let _locationServices = null;
+let _locationEngine = null;
 
-const ACCESS_FINE_LOCATION_PERMISSION_REQUEST_CODE = 111; // irrelevant really, since we simply invoke onPermissionGranted
+const ACCESS_FINE_LOCATION_PERMISSION_REQUEST_CODE = 111;
 
 
 /*************** XML definition START ****************/
@@ -63,7 +63,7 @@ export class MapboxView extends MapboxViewBase {
 
         this.mapView.getMapAsync(
             new com.mapbox.mapboxsdk.maps.OnMapReadyCallback({
-              onMapReady: (mbMap) => {
+              onMapReady: mbMap => {
                 this.mapView.mapboxMap = mbMap;
 
                 // note that this is not multi-map friendly, but I don't think that's used in real apps anyway
@@ -73,7 +73,7 @@ export class MapboxView extends MapboxViewBase {
                 if (settings.showUserLocation) {
                   this.mapbox.requestFineLocationPermission().then(() => {
                     setTimeout(() => {
-                      _showLocation(this.mapView);
+                      _showLocation(this.mapView, mbMap);
                     }, 1000);
                     this.notify({
                       eventName: MapboxViewBase.locationPermissionGrantedEvent,
@@ -130,11 +130,6 @@ const _getMapStyle = (input: any) => {
 };
 
 const _getMapboxMapOptions = (settings) => {
-  const resourcename = "mapbox_mylocation_icon_default";
-  const res = utils.ad.getApplicationContext().getResources();
-  const identifier = res.getIdentifier(resourcename, "drawable", utils.ad.getApplication().getPackageName());
-  const iconDrawable = android.support.v4.content.ContextCompat.getDrawable(application.android.context, identifier);
-
   const mapboxMapOptions = new com.mapbox.mapboxsdk.maps.MapboxMapOptions()
       .styleUrl(_getMapStyle(settings.style))
       .compassEnabled(!settings.hideCompass)
@@ -143,12 +138,6 @@ const _getMapboxMapOptions = (settings) => {
       .tiltGesturesEnabled(!settings.disableTilt)
       .zoomGesturesEnabled(!settings.disableZoom)
       .attributionEnabled(!settings.hideAttribution)
-      .myLocationForegroundDrawable(iconDrawable)
-      // .myLocationBackgroundDrawable(iconDrawable)
-      .myLocationForegroundTintColor(android.graphics.Color.rgb(135, 206, 250)) // "lightskyblue"
-      // .myLocationBackgroundTintColor(android.graphics.Color.YELLOW)
-      .myLocationAccuracyTint(android.graphics.Color.rgb(135, 206, 250)) // "lightskyblue"
-      .myLocationAccuracyAlpha(80)
       .logoEnabled(!settings.hideLogo);
 
   // zoomlevel is not applied unless center is set
@@ -179,16 +168,15 @@ const _fineLocationPermissionGranted = () => {
   return hasPermission;
 };
 
-// TODO deprecated in 5.2.0, see https://github.com/mapbox/mapbox-gl-native/issues/9775#issuecomment-322695996
-const _showLocation = (theMapView) => {
-  _locationServices = new com.mapbox.mapboxsdk.location.LocationSource(application.android.context);
-  theMapView.mapboxMap.setMyLocationEnabled(true);
-  // TODO nice candidate for a property the user can pass in
-  // theMapView.mapboxMap.getTrackingSettings().setMyLocationTrackingMode(com.mapbox.mapboxsdk.constants.MyLocationTracking.TRACKING_FOLLOW);
-  theMapView.mapboxMap.getTrackingSettings().setMyBearingTrackingMode(com.mapbox.mapboxsdk.constants.MyBearingTracking.COMPASS);
-  theMapView.mapboxMap.getTrackingSettings().setLocationChangeAnimationEnabled(true);
-  _locationServices.activate();
-  _locationServices.requestLocationUpdates();
+const _showLocation = (theMapView, mapboxMap) => {
+  if (!_locationEngine) {
+    _locationEngine = new com.mapbox.services.android.location.LostLocationEngine(application.android.context);
+    _locationEngine.setPriority(com.mapbox.services.android.telemetry.location.LocationEnginePriority.HIGH_ACCURACY);
+    _locationEngine.activate();
+  }
+
+  const locationLayerPlugin = new com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin(theMapView, mapboxMap, _locationEngine);
+  locationLayerPlugin.setLocationLayerEnabled(com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerMode.TRACKING);
 };
 
 const _getClickedMarkerDetails = (clicked) => {
@@ -247,7 +235,7 @@ const _downloadMarkerImages = (markers) => {
   });
 };
 
-const _addMarkers = (markers, nativeMap?) => {
+const _addMarkers = (markers: MapboxMarker[], nativeMap?) => {
   if (!markers) {
     console.log("No markers passed");
     return;
@@ -288,7 +276,7 @@ const _addMarkers = (markers, nativeMap?) => {
   const iconFactory = com.mapbox.mapboxsdk.annotations.IconFactory.getInstance(application.android.context);
 
   // if any markers need to be downloaded from the web they need to be available synchronously, so fetch them first before looping
-  _downloadMarkerImages(markers).then((updatedMarkers) => {
+  _downloadMarkerImages(markers).then(updatedMarkers => {
     for (let m in updatedMarkers) {
       let marker: any = updatedMarkers[m];
       _markers.push(marker);
@@ -327,6 +315,10 @@ const _addMarkers = (markers, nativeMap?) => {
         }
       }
       marker.android = theMap.mapboxMap.addMarker(markerOptions);
+
+      if (marker.selected) {
+        theMap.mapboxMap.selectMarker(marker.android);
+      }
     }
   });
 };
@@ -382,7 +374,7 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
     });
   }
 
-  requestFineLocationPermission(): Promise<boolean> {
+  requestFineLocationPermission(): Promise<any> {
     return new Promise((resolve, reject) => {
       if (_fineLocationPermissionGranted()) {
         resolve();
@@ -391,6 +383,9 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
 
       // grab the permission dialog result
       application.android.on(application.AndroidApplication.activityRequestPermissionsEvent, (args: any) => {
+        if (args.requestCode !== ACCESS_FINE_LOCATION_PERMISSION_REQUEST_CODE) {
+          return;
+        }
         for (let i = 0; i < args.permissions.length; i++) {
           if (args.grantResults[i] === android.content.pm.PackageManager.PERMISSION_DENIED) {
             reject("Permission denied");
@@ -440,7 +435,7 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
 
           _mapbox.mapView.getMapAsync(
               new com.mapbox.mapboxsdk.maps.OnMapReadyCallback({
-                onMapReady: (mbMap) => {
+                onMapReady: mbMap => {
                   _mapbox.mapboxMap = mbMap;
                   _mapbox.mapView.mapboxMap = mbMap;
 
@@ -449,8 +444,8 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
                   _addMarkers(settings.markers, _mapbox.mapView);
 
                   if (settings.showUserLocation) {
-                    this.requestFineLocationPermission().then((granted: boolean) => {
-                      _showLocation(_mapbox.mapView);
+                    this.requestFineLocationPermission().then(() => {
+                      _showLocation(_mapbox.mapView, mbMap);
                     });
                   }
                   resolve({
@@ -698,6 +693,28 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
     });
   }
 
+  getUserLocation(): Promise<UserLocation> {
+    return new Promise((resolve, reject) => {
+      try {
+        const loc = _locationEngine ? _locationEngine.getLastLocation() : null;
+        if (loc === null) {
+          reject("Location not available");
+        } else {
+          resolve({
+            location: {
+              lat: loc.getLatitude(),
+              lng: loc.getLongitude()
+            },
+            speed: loc.getSpeed()
+          });
+        }
+      } catch (ex) {
+        console.log("Error in mapbox.getUserLocation: " + ex);
+        reject(ex);
+      }
+    });
+  }
+
   addPolygon(options: AddPolygonOptions, nativeMap?): Promise<any> {
     return new Promise((resolve, reject) => {
       try {
@@ -826,7 +843,7 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
 
         theMap.mapboxMap.setOnMapClickListener(
             new com.mapbox.mapboxsdk.maps.MapboxMap.OnMapClickListener({
-              onMapClick: (point) => {
+              onMapClick: point => {
                 listener({
                   lat: point.getLatitude(),
                   lng: point.getLongitude()
@@ -838,6 +855,136 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
         resolve();
       } catch (ex) {
         console.log("Error in mapbox.setOnMapClickListener: " + ex);
+        reject(ex);
+      }
+    });
+  }
+
+  setOnScrollListener(listener: (data?: LatLng) => void, nativeMap?): Promise<any> {
+    return new Promise((resolve, reject) => {
+      try {
+        const theMap = nativeMap || _mapbox;
+
+        if (!theMap) {
+          reject("No map has been loaded");
+          return;
+        }
+
+        theMap.mapboxMap.setOnScrollListener(
+            new com.mapbox.mapboxsdk.maps.MapboxMap.OnScrollListener({
+              onScroll: () => {
+                listener();
+              }
+            })
+        );
+
+        resolve();
+      } catch (ex) {
+        console.log("Error in mapbox.setOnScrollListener: " + ex);
+        reject(ex);
+      }
+    });
+  }
+
+  setOnFlingListener(listener: () => void, nativeMap?): Promise<any> {
+    return new Promise((resolve, reject) => {
+      try {
+        const theMap = nativeMap || _mapbox;
+
+        if (!theMap) {
+          reject("No map has been loaded");
+          return;
+        }
+
+        theMap.mapboxMap.setOnFlingListener(
+            new com.mapbox.mapboxsdk.maps.MapboxMap.OnFlingListener({
+              onFling: () => {
+                listener();
+              }
+            })
+        );
+
+        resolve();
+      } catch (ex) {
+        console.log("Error in mapbox.setOnFlingListener: " + ex);
+        reject(ex);
+      }
+    });
+  }
+
+  setOnCameraMoveListener(listener: () => void, nativeMap?): Promise<any> {
+    return new Promise((resolve, reject) => {
+      try {
+        const theMap = nativeMap || _mapbox;
+
+        if (!theMap) {
+          reject("No map has been loaded");
+          return;
+        }
+
+        theMap.mapboxMap.setOnCameraMoveListener(
+            new com.mapbox.mapboxsdk.maps.MapboxMap.OnCameraMoveListener({
+              onCameraMove: () => {
+                listener();
+              }
+            })
+        );
+
+        resolve();
+      } catch (ex) {
+        console.log("Error in mapbox.setOnCameraMoveListener: " + ex);
+        reject(ex);
+      }
+    });
+  }
+
+  setOnCameraMoveCancelListener(listener: () => void, nativeMap?): Promise<any> {
+    return new Promise((resolve, reject) => {
+      try {
+        const theMap = nativeMap || _mapbox;
+
+        if (!theMap) {
+          reject("No map has been loaded");
+          return;
+        }
+
+        theMap.mapboxMap.setOnCameraMoveCancelListener(
+            new com.mapbox.mapboxsdk.maps.MapboxMap.OnCameraMoveCanceledListener({
+              onCameraMoveCanceled: () => {
+                listener();
+              }
+            })
+        );
+
+        resolve();
+      } catch (ex) {
+        console.log("Error in mapbox.setOnCameraMoveCancelListener: " + ex);
+        reject(ex);
+      }
+    });
+  }
+
+  setOnCameraIdleListener(listener: () => void, nativeMap?): Promise<any> {
+    return new Promise((resolve, reject) => {
+      try {
+        const theMap = nativeMap || _mapbox;
+
+        if (!theMap) {
+          reject("No map has been loaded");
+          return;
+        }
+
+        theMap.mapboxMap.setOnCameraIdleListener(
+            new com.mapbox.mapboxsdk.maps.MapboxMap.OnCameraIdleListener({
+              onCameraIdle: () => {
+                listener();
+              }
+            })
+        );
+
+        resolve();
+      } catch (ex) {
+        console.log("Error in mapbox.setOnCameraIdleListener: " + ex);
         reject(ex);
       }
     });
@@ -933,8 +1080,8 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
         }
         if (!_accessToken) {
           _accessToken = options.accessToken;
+          com.mapbox.mapboxsdk.Mapbox.getInstance(application.android.context, _accessToken);
         }
-        com.mapbox.mapboxsdk.Mapbox.getInstance(application.android.context, _accessToken);
 
         _getOfflineManager().createOfflineRegion(offlineRegionDefinition, encodedMetadata, new com.mapbox.mapboxsdk.offline.OfflineManager.CreateOfflineRegionCallback({
           onError: (error: string) => {
@@ -991,9 +1138,18 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
     });
   }
 
-  listOfflineRegions(): Promise<OfflineRegion[]> {
+  listOfflineRegions(options?: ListOfflineRegionsOptions): Promise<OfflineRegion[]> {
     return new Promise((resolve, reject) => {
       try {
+        if (!_accessToken && !options.accessToken) {
+          reject("First show a map, or pass in an 'accessToken' param");
+          return;
+        }
+        if (!_accessToken) {
+          _accessToken = options.accessToken;
+          com.mapbox.mapboxsdk.Mapbox.getInstance(application.android.context, _accessToken);
+        }
+
         _getOfflineManager().listOfflineRegions(new com.mapbox.mapboxsdk.offline.OfflineManager.ListOfflineRegionsCallback({
           onError: (error: string) => {
             reject(error);

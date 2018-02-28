@@ -25,6 +25,11 @@ export interface AddPolygonOptions {
   strokeColor?: string | Color;
 }
 
+export interface UserLocation {
+  location: LatLng;
+  speed: number;
+}
+
 export interface SetCenterOptions extends LatLng {
   animated?: boolean;
 }
@@ -76,6 +81,12 @@ export interface MapboxMarker extends LatLng {
    * A callback function to invoke when the callout (popup) of this marker is tapped.
    */
   onCalloutTap?: Function;
+  /**
+   * Set to true to select the marker when rendered - effectively showing any configured callout.
+   * Note that only 1 callout will be shown at any time on a Mapbox map.
+   * Default false.
+   */
+  selected?: boolean;
 }
 
 export interface SetZoomLevelOptions {
@@ -176,6 +187,15 @@ export interface DownloadOfflineRegionOptions extends OfflineRegion {
   onProgress?: (data: DownloadProgress) => void;
   /**
    * Optional, used on Android only.
+   * Set this, in case no map has been show yet (and thus, no accessToken has been passed in yet).
+   */
+  accessToken?: string;
+}
+
+export interface ListOfflineRegionsOptions {
+  /**
+   * Optional, used on Android only.
+   * Set this, in case no map has been show yet (and thus, no accessToken has been passed in yet).
    */
   accessToken?: string;
 }
@@ -260,8 +280,12 @@ export interface ShowOptions {
 }
 
 export interface ShowResult {
-  ios: any /* MGLMapView */;
-  android: any /* com.mapbox.mapboxsdk.maps.MapView */;
+  ios: any
+  /* MGLMapView */
+  ;
+  android: any
+  /* com.mapbox.mapboxsdk.maps.MapView */
+  ;
 }
 
 export interface AnimateCameraOptions {
@@ -280,46 +304,72 @@ export interface AnimateCameraOptions {
 }
 
 export interface MapboxCommonApi {
-  requestFineLocationPermission(): Promise<boolean>;
+  requestFineLocationPermission(): Promise<any>;
+
   hasFineLocationPermission(): Promise<boolean>;
 }
 
 export interface MapboxApi {
   show(options: ShowOptions): Promise<ShowResult>;
+
   hide(): Promise<any>;
+
   unhide(): Promise<any>;
+
   destroy(nativeMap?: any): Promise<any>;
 
   setMapStyle(style: string | MapStyle, nativeMap?: any): Promise<any>;
 
   addMarkers(markers: MapboxMarker[], nativeMap?: any): Promise<any>;
+
   removeMarkers(options?: any, nativeMap?: any): Promise<any>;
 
   setCenter(options: SetCenterOptions, nativeMap?: any): Promise<any>;
+
   getCenter(nativeMap?: any): Promise<LatLng>;
 
   setZoomLevel(options: SetZoomLevelOptions, nativeMap?: any): Promise<any>;
+
   getZoomLevel(nativeMap?: any): Promise<number>;
 
   setTilt(options: SetTiltOptions, nativeMap?: any): Promise<any>;
+
   getTilt(nativeMap?: any): Promise<number>;
 
+  getUserLocation(nativeMap?: any): Promise<UserLocation>;
+
   addPolygon(options: AddPolygonOptions, nativeMap?: any): Promise<any>;
+
   addPolyline(options: AddPolylineOptions, nativeMap?: any): Promise<any>;
+
   removePolylines(ids?: Array<any>, nativeMap?: any): Promise<any>;
 
   animateCamera(options: AnimateCameraOptions, nativeMap?: any): Promise<any>;
 
   setOnMapClickListener(listener: (data: LatLng) => void, nativeMap?): Promise<any>;
 
+  setOnScrollListener(listener: (data?: LatLng) => void, nativeMap?: any): Promise<any>;
+
+  setOnFlingListener(listener: () => void, nativeMap?: any): Promise<any>;
+
+  setOnCameraMoveListener(listener: () => void, nativeMap?: any): Promise<any>;
+
+  setOnCameraMoveCancelListener(listener: () => void, nativeMap?: any): Promise<any>;
+
+  setOnCameraIdleListener(listener: () => void, nativeMap?: any): Promise<any>;
+
   requestFineLocationPermission(): Promise<any>;
+
   hasFineLocationPermission(): Promise<boolean>;
 
   getViewport(nativeMap?: any): Promise<Viewport>;
+
   setViewport(options: SetViewportOptions, nativeMap?: any): Promise<any>;
 
   downloadOfflineRegion(options: DownloadOfflineRegionOptions): Promise<any>;
-  listOfflineRegions(): Promise<Array<OfflineRegion>>;
+
+  listOfflineRegions(options?: ListOfflineRegionsOptions): Promise<Array<OfflineRegion>>;
+
   deleteOfflineRegion(options: DeleteOfflineRegionOptions): Promise<any>;
 
   addGeoJsonClustered(options: AddGeoJsonClusteredOptions): Promise<any>;
@@ -375,14 +425,14 @@ export abstract class MapboxCommon implements MapboxCommonApi {
     return result;
   }
 
-  requestFineLocationPermission(): Promise<boolean> {
-    return new Promise((resolve) => {
-      resolve(true);
+  requestFineLocationPermission(): Promise<any> {
+    return new Promise(resolve => {
+      resolve();
     });
   }
 
   hasFineLocationPermission(): Promise<boolean> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       resolve(true);
     });
   }
@@ -392,21 +442,47 @@ export abstract class MapboxCommon implements MapboxCommonApi {
 export interface MapboxViewApi {
   // these functions can be called after the mapReady event fired
   addMarkers(markers: MapboxMarker[]): Promise<any>;
+
   removeMarkers(options?: any): Promise<any>;
+
   setOnMapClickListener(listener: (data: LatLng) => void): Promise<any>;
+
+  setOnScrollListener(listener: (data?: LatLng) => void): Promise<any>;
+
+  setOnFlingListener(listener: () => void): Promise<any>;
+
+  setOnCameraMoveListener(listener: () => void): Promise<any>;
+
+  setOnCameraMoveCancelListener(listener: () => void): Promise<any>;
+
+  setOnCameraIdleListener(listener: () => void): Promise<any>;
+
   getViewport(): Promise<Viewport>;
+
   setViewport(options: SetViewportOptions): Promise<any>;
+
   setMapStyle(style: string | MapStyle): Promise<any>;
+
   getCenter(): Promise<LatLng>;
+
   setCenter(options: SetCenterOptions): Promise<any>;
+
   getZoomLevel(): Promise<number>;
+
   setZoomLevel(options: SetZoomLevelOptions): Promise<any>;
+
   getTilt(): Promise<number>;
+
   setTilt(options: SetTiltOptions): Promise<any>;
+
   addPolygon(options: AddPolygonOptions): Promise<any>;
+
   addPolyline(options: AddPolylineOptions): Promise<any>;
+
   removePolylines(ids?: Array<any>): Promise<any>;
+
   animateCamera(options: AnimateCameraOptions): Promise<any>;
+
   destroy(): Promise<any>;
 
   getFeaturesAtPoint(data:MapPoint, layers:string[]):Feature[];
@@ -432,6 +508,26 @@ export abstract class MapboxViewCommonBase extends View implements MapboxViewApi
 
   setOnMapClickListener(listener: (data: LatLng) => void): Promise<any> {
     return this.mapbox.setOnMapClickListener(listener, this.getNativeMapView());
+  }
+
+  setOnScrollListener(listener: (data?: LatLng) => void, nativeMap?: any): Promise<any> {
+    return this.mapbox.setOnScrollListener(listener, this.getNativeMapView());
+  }
+
+  setOnFlingListener(listener: () => void, nativeMap?: any): Promise<any> {
+    return this.mapbox.setOnFlingListener(listener, this.getNativeMapView());
+  }
+
+  setOnCameraMoveListener(listener: () => void, nativeMap?: any): Promise<any> {
+    return this.mapbox.setOnCameraMoveListener(listener, this.getNativeMapView());
+  }
+
+  setOnCameraMoveCancelListener(listener: () => void, nativeMap?: any): Promise<any> {
+    return this.mapbox.setOnCameraMoveCancelListener(listener, this.getNativeMapView());
+  }
+
+  setOnCameraIdleListener(listener: () => void, nativeMap?: any): Promise<any> {
+    return this.mapbox.setOnCameraIdleListener(listener, this.getNativeMapView());
   }
 
   getViewport(): Promise<Viewport> {
@@ -468,6 +564,10 @@ export abstract class MapboxViewCommonBase extends View implements MapboxViewApi
 
   setTilt(options: SetTiltOptions): Promise<any> {
     return this.mapbox.setTilt(options, this.getNativeMapView());
+  }
+
+  getUserLocation(): Promise<UserLocation> {
+    return this.mapbox.getUserLocation(this.getNativeMapView());
   }
 
   addPolygon(options: AddPolygonOptions): Promise<any> {
@@ -508,46 +608,78 @@ export abstract class MapboxViewCommonBase extends View implements MapboxViewApi
 
 }
 
-export const zoomLevelProperty = new Property<MapboxViewCommonBase, number>({ name: "zoomLevel" });
+export const zoomLevelProperty = new Property<MapboxViewCommonBase, number>({name: "zoomLevel"});
 zoomLevelProperty.register(MapboxViewCommonBase);
 
-export const accessTokenProperty = new Property<MapboxViewCommonBase, string>({ name: "accessToken" });
+export const accessTokenProperty = new Property<MapboxViewCommonBase, string>({name: "accessToken"});
 accessTokenProperty.register(MapboxViewCommonBase);
 
-export const mapStyleProperty = new Property<MapboxViewCommonBase, string>({ name: "mapStyle" });
+export const mapStyleProperty = new Property<MapboxViewCommonBase, string>({name: "mapStyle"});
 mapStyleProperty.register(MapboxViewCommonBase);
 
-export const latitudeProperty = new Property<MapboxViewCommonBase, number>({ name: "latitude" });
+export const latitudeProperty = new Property<MapboxViewCommonBase, number>({name: "latitude"});
 latitudeProperty.register(MapboxViewCommonBase);
 
-export const longitudeProperty = new Property<MapboxViewCommonBase, number>({ name: "longitude" });
+export const longitudeProperty = new Property<MapboxViewCommonBase, number>({name: "longitude"});
 longitudeProperty.register(MapboxViewCommonBase);
 
-export const showUserLocationProperty = new Property<MapboxViewCommonBase, boolean>({ name: "showUserLocation", defaultValue: MapboxCommon.defaults.showUserLocation, valueConverter: booleanConverter });
+export const showUserLocationProperty = new Property<MapboxViewCommonBase, boolean>({
+  name: "showUserLocation",
+  defaultValue: MapboxCommon.defaults.showUserLocation,
+  valueConverter: booleanConverter
+});
 showUserLocationProperty.register(MapboxViewCommonBase);
 
-export const hideLogoProperty = new Property<MapboxViewCommonBase, boolean>({ name: "hideLogo", defaultValue: MapboxCommon.defaults.hideLogo, valueConverter: booleanConverter });
+export const hideLogoProperty = new Property<MapboxViewCommonBase, boolean>({
+  name: "hideLogo",
+  defaultValue: MapboxCommon.defaults.hideLogo,
+  valueConverter: booleanConverter
+});
 hideLogoProperty.register(MapboxViewCommonBase);
 
-export const hideAttributionProperty = new Property<MapboxViewCommonBase, boolean>({ name: "hideAttribution", defaultValue: MapboxCommon.defaults.hideAttribution, valueConverter: booleanConverter });
+export const hideAttributionProperty = new Property<MapboxViewCommonBase, boolean>({
+  name: "hideAttribution",
+  defaultValue: MapboxCommon.defaults.hideAttribution,
+  valueConverter: booleanConverter
+});
 hideAttributionProperty.register(MapboxViewCommonBase);
 
-export const hideCompassProperty = new Property<MapboxViewCommonBase, boolean>({ name: "hideCompass", defaultValue: MapboxCommon.defaults.hideCompass, valueConverter: booleanConverter });
+export const hideCompassProperty = new Property<MapboxViewCommonBase, boolean>({
+  name: "hideCompass",
+  defaultValue: MapboxCommon.defaults.hideCompass,
+  valueConverter: booleanConverter
+});
 hideCompassProperty.register(MapboxViewCommonBase);
 
-export const disableZoomProperty = new Property<MapboxViewCommonBase, boolean>({ name: "disableZoom", defaultValue: MapboxCommon.defaults.disableZoom, valueConverter: booleanConverter });
+export const disableZoomProperty = new Property<MapboxViewCommonBase, boolean>({
+  name: "disableZoom",
+  defaultValue: MapboxCommon.defaults.disableZoom,
+  valueConverter: booleanConverter
+});
 disableZoomProperty.register(MapboxViewCommonBase);
 
-export const disableRotationProperty = new Property<MapboxViewCommonBase, boolean>({ name: "disableRotation", defaultValue: MapboxCommon.defaults.disableRotation, valueConverter: booleanConverter });
+export const disableRotationProperty = new Property<MapboxViewCommonBase, boolean>({
+  name: "disableRotation",
+  defaultValue: MapboxCommon.defaults.disableRotation,
+  valueConverter: booleanConverter
+});
 disableRotationProperty.register(MapboxViewCommonBase);
 
-export const disableScrollProperty = new Property<MapboxViewCommonBase, boolean>({ name: "disableScroll", defaultValue: MapboxCommon.defaults.disableScroll, valueConverter: booleanConverter });
+export const disableScrollProperty = new Property<MapboxViewCommonBase, boolean>({
+  name: "disableScroll",
+  defaultValue: MapboxCommon.defaults.disableScroll,
+  valueConverter: booleanConverter
+});
 disableScrollProperty.register(MapboxViewCommonBase);
 
-export const disableTiltProperty = new Property<MapboxViewCommonBase, boolean>({ name: "disableTilt", defaultValue: MapboxCommon.defaults.disableTilt, valueConverter: booleanConverter });
+export const disableTiltProperty = new Property<MapboxViewCommonBase, boolean>({
+  name: "disableTilt",
+  defaultValue: MapboxCommon.defaults.disableTilt,
+  valueConverter: booleanConverter
+});
 disableTiltProperty.register(MapboxViewCommonBase);
 
-export const delayProperty = new Property<MapboxViewCommonBase, number>({ name: "delay" });
+export const delayProperty = new Property<MapboxViewCommonBase, number>({name: "delay"});
 delayProperty.register(MapboxViewCommonBase);
 
 export abstract class MapboxViewBase extends MapboxViewCommonBase {

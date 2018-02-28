@@ -1,4 +1,8 @@
-# NativeScript Mapbox 🗺
+<a href="https://www.mapbox.com">
+  <img src="/screenshots/mapbox_logo.png" width="400"/>
+</a>
+
+# NativeScript Mapbox plugin
 
 [![Build Status][build-status]][build-url]
 [![NPM version][npm-image]][npm-url]
@@ -150,6 +154,7 @@ function onMapReady(args) {
       lng: 4.8891680,
       title: 'One-line title here',
       subtitle: 'Really really nice location',
+      selected: true, // makes the callout show immediately when the marker is added (note: only 1 marker can be selected at a time)
       onCalloutTap: function(){console.log("'Nice location' marker callout tapped");}
     }]
   );
@@ -224,6 +229,7 @@ Check out the usage details on the functions below.
         icon: 'res://cool_marker', // use either this preferred way (to grab a density-independent marker from app resources), or:
         // icon: 'http(s)://my-remote-image', // an image from the interwebs (see the note at the bottom of this readme), or:
         iconPath: 'res/markers/green_pin_marker.png', // anywhere in your app folder
+        selected: true, // makes the callout show immediately when the marker is added (note: only 1 marker can be selected at a time)
         onTap: function(marker) { console.log("This marker was tapped"); },
         onCalloutTap: function(marker) { console.log("The callout of this marker was tapped"); }
       }
@@ -286,6 +292,7 @@ You can update the map style after you've loaded it. How neat is that!?
       // icon: 'res://cool_marker', // preferred way, otherwise use:
       icon: 'http(s)://website/coolimage.png', // from the internet (see the note at the bottom of this readme), or:
       iconPath: 'res/markers/home_marker.png',
+      selected: true, // makes the callout show immediately when the marker is added (note: only 1 marker can be selected at a time)
       onTap: onTap,
       onCalloutTap: onCalloutTap
     },
@@ -399,7 +406,7 @@ Here the promise callback makes sense, so adding it to the example:
   })
 ```
 
-### setTilt (Android)
+### setTilt (Android only)
 ```js
   mapbox.setTilt(
       {
@@ -409,7 +416,7 @@ Here the promise callback makes sense, so adding it to the example:
   )
 ```
 
-### getTilt (Android)
+### getTilt (Android only)
 ```js
   mapbox.getTilt().then(
       function(tilt) {
@@ -418,7 +425,19 @@ Here the promise callback makes sense, so adding it to the example:
   )
 ```
 
-### addPolygon (Android)
+### getUserLocation
+If the user's location is shown on the map you can get their coordinates and speed:
+
+```js
+  mapbox.getUserLocation().then(
+      function(userLocation) {
+        console.log("Current user location: " +  userLocation.location.lat + ", " + userLocation.location.lng);
+        console.log("Current user speed: " +  userLocation.speed);
+      }
+  )
+```
+
+### addPolygon (Android only)
 Draw a shape (like a line/route, or star). Just connect the dots like we did as a child. The first person to tweet a snowman drawn with this function gets a T-shirt.
 ```js
   // this is a boring triangle drawn near Amsterdam Central Station
@@ -466,7 +485,7 @@ Draw a polyline. Connect the points given as parameters.
   });
 ```
 
-### removePolylines (Android)
+### removePolylines (Android only)
 You can either remove all polylines by not passing in an argument,
 or remove specific polyline id's (which you specified previously). 
 
@@ -478,12 +497,21 @@ or remove specific polyline id's (which you specified previously).
   mapbox.removePolylines([1, 2]);
 ```
 
-### setOnMapClickListener (Android)
-Add a listener to retrieve lat and lng when the user taps the map (not a marker).
+### setOnMapClickListener
+Add a listener to retrieve lat and lng of where the user taps the map (not a marker).
 
-```js
-  mapbox.setOnMapClickListener(function(point) {
+```typescript
+  mapbox.setOnMapClickListener((point: LatLng) => {
     console.log("Map clicked at latitude: " + point.lat + ", longitude: " + point.lng);
+  });
+```
+
+### setOnMapScrollListener
+Add a listener to retrieve lat and lng of where the user scrolls to on the map (lat/lng only returned on iOS though).
+
+```typescript
+  mapbox.setOnMapScrollListener((point?: LatLng) => {
+    console.log("Map scrolled to latitude: " + point.lat + ", longitude: " + point.lng);
   });
 ```
 
@@ -552,7 +580,7 @@ To help you manage offline regions there's a `listOfflineRegions` function you c
 ```js
   mapbox.listOfflineRegions({
     // required for Android in case no map has been shown yet
-    accessToken: accessToken,
+    accessToken: accessToken
   }).then(
     function(regions) {
       console.log(JSON.stringify(JSON.stringify(regions));

@@ -11,7 +11,7 @@ import {
   MapboxCommon,
   MapboxViewBase,
   MapStyle, OfflineRegion, SetCenterOptions, SetTiltOptions, SetViewportOptions, SetZoomLevelOptions, ShowOptions,
-  Viewport, Feature, MapPoint, AddExtrusionOptions
+  Viewport, AddExtrusionOptions, UserLocation, ListOfflineRegionsOptions, Feature, MapPoint
 } from "./mapbox.common";
 import { Color } from "tns-core-modules/color";
 
@@ -123,6 +123,16 @@ export class MapboxView extends MapboxViewBase {
       setTimeout(drawMap, settings.delay ? settings.delay : 0);
     }
   }
+
+  public onLayout(left: number, top: number, right: number, bottom: number): void {
+    // in case the user wrapped the map in a layout that doesn't specify height, simply 'auto-grow' the map ourselves
+    if (this.ios.layer.bounds.size.width === 0 || this.ios.layer.bounds.size.height === 0) {
+      if (this.ios.superview) {
+        this.mapView.frame = CGRectMake(0, 0, this.ios.superview.layer.bounds.size.width, this.ios.superview.layer.bounds.size.height);
+      }
+    }
+    super.onLayout(left, top, right, bottom);
+  }
 }
 
 /*************** XML definition END ****************/
@@ -148,14 +158,14 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
         }
 
         const view = utils.ios.getter(UIApplication, UIApplication.sharedApplication).keyWindow.rootViewController.view,
-          frameRect = view.frame,
-          mapFrame = CGRectMake(
-            settings.margins.left,
-            settings.margins.top,
-            frameRect.size.width - settings.margins.left - settings.margins.right,
-            frameRect.size.height - settings.margins.top - settings.margins.bottom
-          ),
-          styleURL = _getMapStyle(settings.style);
+            frameRect = view.frame,
+            mapFrame = CGRectMake(
+                settings.margins.left,
+                settings.margins.top,
+                frameRect.size.width - settings.margins.left - settings.margins.right,
+                frameRect.size.height - settings.margins.top - settings.margins.bottom
+            ),
+            styleURL = _getMapStyle(settings.style);
 
         MGLAccountManager.setAccessToken(settings.accessToken);
         _mapbox.mapView = MGLMapView.alloc().initWithFrameStyleURL(mapFrame, styleURL);
@@ -385,6 +395,29 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
     });
   }
 
+  getUserLocation(nativeMap?): Promise<UserLocation> {
+    return new Promise((resolve, reject) => {
+      try {
+        let theMap: MGLMapView = nativeMap || _mapbox.mapView;
+        const loc = theMap.userLocation;
+        if (loc === null) {
+          reject("Location not available");
+        } else {
+          resolve({
+            location: {
+              lat: loc.coordinate.latitude,
+              lng: loc.coordinate.longitude
+            },
+            speed: loc.location.speed
+          });
+        }
+      } catch (ex) {
+        console.log("Error in mapbox.getUserLocation: " + ex);
+        reject(ex);
+      }
+    });
+  }
+
   addPolygon(options: AddPolygonOptions, nativeMap?): Promise<any> {
     return new Promise((resolve, reject) => {
       reject("not implemented for iOS");
@@ -514,6 +547,7 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
         theMap['mapTapHandler'] = MapTapHandlerImpl.initWithOwnerAndListenerForMap(new WeakRef(this), listener, theMap);
         const tapGestureRecognizer = UITapGestureRecognizer.alloc().initWithTargetAction(theMap['mapTapHandler'], "tap");
 
+        // cancel the default tap handler
         for (let i = 0; i < theMap.gestureRecognizers.count; i++) {
           let recognizer: UIGestureRecognizer = theMap.gestureRecognizers.objectAtIndex(i);
           if (recognizer instanceof UITapGestureRecognizer) {
@@ -529,6 +563,53 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
         reject(ex);
       }
     });
+  }
+
+  setOnScrollListener(listener: (data?: LatLng) => void, nativeMap?: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+      try {
+        let theMap: MGLMapView = nativeMap || _mapbox.mapView;
+
+        if (!theMap) {
+          reject("No map has been loaded");
+          return;
+        }
+
+        // adding the pan handler to the map oject so it's not GC'd
+        theMap['mapPanHandler'] = MapPanHandlerImpl.initWithOwnerAndListenerForMap(new WeakRef(this), listener, theMap);
+
+        // there's already a pan recognizer, so find it and attach a target action
+        for (let i = 0; i < theMap.gestureRecognizers.count; i++) {
+          let recognizer: UIGestureRecognizer = theMap.gestureRecognizers.objectAtIndex(i);
+          if (recognizer instanceof UIPanGestureRecognizer) {
+            recognizer.addTargetAction(theMap['mapPanHandler'], "pan");
+            break;
+          }
+        }
+
+        resolve();
+      } catch (ex) {
+        console.log("Error in mapbox.setOnScrollListener: " + ex);
+        reject(ex);
+      }
+    });
+  }
+
+  setOnFlingListener(listener: () => void, nativeMap?: any): Promise<any> {
+    // there's no swipe event we can bind to
+    return Promise.reject("Not supported on iOS");
+  }
+
+  setOnCameraMoveListener(listener: () => void, nativeMap?: any): Promise<any> {
+    return Promise.reject("Not currently supported on iOS");
+  }
+
+  setOnCameraMoveCancelListener(listener: () => void, nativeMap?: any): Promise<any> {
+    return Promise.reject("Not currently supported on iOS");
+  }
+
+  setOnCameraIdleListener(listener: () => void, nativeMap?: any): Promise<any> {
+    return Promise.reject("Not currently supported on iOS");
   }
 
   getViewport(nativeMap?): Promise<Viewport> {
@@ -675,7 +756,7 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
     });
   }
 
-  listOfflineRegions(): Promise<OfflineRegion[]> {
+  listOfflineRegions(options?: ListOfflineRegionsOptions): Promise<OfflineRegion[]> {
     return new Promise((resolve, reject) => {
       try {
         let packs = MGLOfflineStorage.sharedOfflineStorage().packs;
@@ -688,7 +769,6 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
         for (let i = 0; i < packs.count; i++) {
           let pack: MGLOfflinePack = packs.objectAtIndex(i);
           let region: MGLTilePyramidOfflineRegion = <MGLTilePyramidOfflineRegion>pack.region;
-          let style = region.styleURL;
           let userInfo = NSKeyedUnarchiver.unarchiveObjectWithData(pack.context);
           regions.push({
             name: userInfo.objectForKey("name"),
@@ -904,7 +984,7 @@ const _downloadMarkerImages = (markers) => {
   });
 };
 
-const _addMarkers = (markers, nativeMap?) => {
+const _addMarkers = (markers: MapboxMarker[], nativeMap?) => {
   if (!markers) {
     console.log("No markers passed");
     return;
@@ -927,6 +1007,11 @@ const _addMarkers = (markers, nativeMap?) => {
       // needs to be done before adding to the map, otherwise the delegate method 'mapViewImageForAnnotation' can't use it
       _markers.push(marker);
       theMap.addAnnotation(point);
+
+      if (marker.selected) {
+        theMap.selectAnnotationAnimated(point, false);
+      }
+
       marker.ios = point;
     }
   });
@@ -949,6 +1034,8 @@ class MGLMapViewDelegateImpl extends NSObject implements MGLMapViewDelegate {
   mapViewDidFinishLoadingMap(mapView: MGLMapView): void {
     if (this.mapLoadedCallback !== undefined) {
       this.mapLoadedCallback(mapView);
+      // this should be fired only once, but it's also fired when the style changes, so just remove the callback
+      this.mapLoadedCallback = undefined;
     }
   }
 
@@ -977,9 +1064,7 @@ class MGLMapViewDelegateImpl extends NSObject implements MGLMapViewDelegate {
       if (cachedMarker.icon) {
         if (cachedMarker.icon.startsWith("res://")) {
           let resourcename = cachedMarker.icon.substring("res://".length);
-          console.log("resourcename: " + resourcename);
           let imageSource = imgSrc.fromResource(resourcename);
-          console.log("imageSource: " + imageSource);
           if (imageSource === null) {
             console.log(`Unable to locate ${resourcename}`);
           } else {
@@ -1014,6 +1099,7 @@ class MGLMapViewDelegateImpl extends NSObject implements MGLMapViewDelegate {
 
   // fired when a marker is tapped
   mapViewDidSelectAnnotation(mapView: MGLMapView, annotation: MGLAnnotation): void {
+    // console.log(">>>>> mapViewDidSelectAnnotation " + annotation.class() + " @ " + new Date().getTime());
     let cachedMarker = this.getTappedMarkerDetails(annotation);
     if (cachedMarker && cachedMarker.onTap) {
       cachedMarker.onTap(cachedMarker);
@@ -1071,5 +1157,59 @@ class MapTapHandlerImpl extends NSObject {
 
   public static ObjCExposedMethods = {
     "tap": {returns: interop.types.void, params: [interop.types.id]}
+  };
+}
+
+class MapPanHandlerImpl extends NSObject {
+  private _owner: WeakRef<Mapbox>;
+  private _listener: (data?: LatLng) => void;
+  private _mapView: MGLMapView;
+
+  public static initWithOwnerAndListenerForMap(owner: WeakRef<Mapbox>, listener: (data?: LatLng) => void, mapView: MGLMapView): MapPanHandlerImpl {
+    let handler = <MapPanHandlerImpl>MapPanHandlerImpl.new();
+    handler._owner = owner;
+    handler._listener = listener;
+    handler._mapView = mapView;
+    return handler;
+  }
+
+  public pan(recognizer: UIPanGestureRecognizer): void {
+    const panPoint = recognizer.locationInView(this._mapView);
+    const panCoordinate = this._mapView.convertPointToCoordinateFromView(panPoint, this._mapView);
+    this._listener({
+      lat: panCoordinate.latitude,
+      lng: panCoordinate.longitude
+    });
+  }
+
+  public static ObjCExposedMethods = {
+    "pan": {returns: interop.types.void, params: [interop.types.id]}
+  };
+}
+
+class MapSwipeHandlerImpl extends NSObject {
+  private _owner: WeakRef<Mapbox>;
+  private _listener: (data?: LatLng) => void;
+  private _mapView: MGLMapView;
+
+  public static initWithOwnerAndListenerForMap(owner: WeakRef<Mapbox>, listener: (data?: LatLng) => void, mapView: MGLMapView): MapSwipeHandlerImpl {
+    let handler = <MapSwipeHandlerImpl>MapSwipeHandlerImpl.new();
+    handler._owner = owner;
+    handler._listener = listener;
+    handler._mapView = mapView;
+    return handler;
+  }
+
+  public swipe(recognizer: UISwipeGestureRecognizer): void {
+    const swipePoint = recognizer.locationInView(this._mapView);
+    const swipeCoordinate = this._mapView.convertPointToCoordinateFromView(swipePoint, this._mapView);
+    this._listener({
+      lat: swipeCoordinate.latitude,
+      lng: swipeCoordinate.longitude
+    });
+  }
+
+  public static ObjCExposedMethods = {
+    "swipe": {returns: interop.types.void, params: [interop.types.id]}
   };
 }

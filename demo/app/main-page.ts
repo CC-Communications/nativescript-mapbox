@@ -22,11 +22,15 @@ function onMapReady(args) {
   const nativeMapView = args.ios ? args.ios : args.android;
   console.log(`Mapbox onMapReady for ${args.ios ? "iOS" : "Android"}, native object received: ${nativeMapView}`);
 
-  map.setOnMapClickListener((latLng => {
-    console.log(">> latLng clicked = " + JSON.stringify(latLng));
-  }));
+  map.setOnMapClickListener((point: LatLng) => {
+    console.log(`~~~~~ Map clicked: ${JSON.stringify(point)}`);
+  });
 
-  /*
+  map.setOnScrollListener((point?: LatLng) => {
+    // note that only iOS returns the point
+    console.log(`~~~~~ Map scrolled: ${JSON.stringify(point)}`);
+  });
+
   // .. or use the convenience methods exposed on args.map, for instance:
   map.addMarkers([
     {
@@ -44,7 +48,7 @@ function onMapReady(args) {
       }
     }]
   );
-*/
+
   setTimeout(() => {
     map.setOnMapClickListener((point: LatLng) => {
       console.log(`Map clicked: ${JSON.stringify(point)}`);
