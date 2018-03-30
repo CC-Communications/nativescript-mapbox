@@ -2,11 +2,21 @@ import { Observable } from "tns-core-modules/data/observable";
 import { Color } from "tns-core-modules/color";
 import { alert, AlertOptions } from "tns-core-modules/ui/dialogs";
 import * as platform from "tns-core-modules/platform";
-import { Mapbox, MapStyle, OfflineRegion, LatLng, Viewport, DownloadProgress, MapboxMarker } from "nativescript-mapbox";
+import {
+  Mapbox,
+  MapStyle,
+  OfflineRegion,
+  LatLng,
+  Viewport,
+  DownloadProgress,
+  MapboxMarker,
+  MapboxView
+} from "nativescript-mapbox";
 import { GestureEventData } from "tns-core-modules/ui/gestures";
 
 const isIOS = platform.device.os === platform.platformNames.ios;
-const ACCESS_TOKEN = "sk.eyJ1IjoiZWRkeXZlcmJydWdnZW4iLCJhIjoia1JpRW82NCJ9.OgnvpsKzB3GJhzyofQNUBw";
+const ACCESS_TOKEN =
+  "sk.eyJ1IjoiZWRkeXZlcmJydWdnZW4iLCJhIjoia1JpRW82NCJ9.OgnvpsKzB3GJhzyofQNUBw";
 
 export class HelloWorldModel extends Observable {
   private mapbox: Mapbox;
@@ -17,47 +27,55 @@ export class HelloWorldModel extends Observable {
   }
 
   public doShow(): void {
-    this.mapbox.show({
-      accessToken: ACCESS_TOKEN,
-      style: MapStyle.LIGHT,
-      margins: {
-        left: 18,
-        right: 18,
-        top: isIOS ? 384 : 424,
-        bottom: isIOS ? 50 : 8
-      },
-      center: {
-        lat: 52.3702160,
-        lng: 4.8951680
-      },
-      zoomLevel: 9, // 0 (most of the world) to 20, default 0
-      showUserLocation: true, // default false
-      hideAttribution: true, // default false
-      hideLogo: true, // default false
-      hideCompass: false, // default false
-      disableRotation: false, // default false
-      disableScroll: false, // default false
-      disableZoom: false, // default false
-      disableTilt: false, // default false
-      markers: [
-        {
-          id: 1,
-          lat: 52.3732160,
-          lng: 4.8941680,
-          title: 'Nice location',
-          subtitle: 'Really really nice location',
-          iconPath: 'res/markers/green_pin_marker.png',
-          onTap: () => {
-            console.log("'Nice location' marker tapped");
-          },
-          onCalloutTap: () => {
-            console.log("'Nice location' marker callout tapped");
+    this.mapbox
+      .show({
+        accessToken: ACCESS_TOKEN,
+        style: MapStyle.LIGHT,
+        margins: {
+          left: 18,
+          right: 18,
+          top: isIOS ? 384 : 424,
+          bottom: isIOS ? 50 : 8
+        },
+        center: {
+          lat: 52.370216,
+          lng: 4.895168
+        },
+        zoomLevel: 9, // 0 (most of the world) to 20, default 0
+        showUserLocation: true, // default false
+        hideAttribution: true, // default false
+        hideLogo: true, // default false
+        hideCompass: false, // default false
+        disableRotation: false, // default false
+        disableScroll: false, // default false
+        disableZoom: false, // default false
+        disableTilt: false, // default false
+        markers: [
+          {
+            id: 1,
+            lat: 52.373216,
+            lng: 4.894168,
+            title: "Nice location",
+            subtitle: "Really really nice location",
+            iconPath: "res/markers/green_pin_marker.png",
+            onTap: () => {
+              console.log("'Nice location' marker tapped");
+            },
+            onCalloutTap: () => {
+              console.log("'Nice location' marker callout tapped");
+            }
           }
-        }
-      ]
-    }).then(
-        (showResult) => {
-          console.log(`Mapbox show done for ${showResult.ios ? "iOS" : "Android"}, native object received: ${showResult.ios ? showResult.ios : showResult.android}`);
+        ]
+      })
+      .then(
+        showResult => {
+          console.log(
+            `Mapbox show done for ${
+              showResult.ios ? "iOS" : "Android"
+            }, native object received: ${
+              showResult.ios ? showResult.ios : showResult.android
+            }`
+          );
 
           this.mapbox.setOnMapClickListener(point => {
             console.log(`>> Map clicked: ${JSON.stringify(point)}`);
@@ -68,72 +86,70 @@ export class HelloWorldModel extends Observable {
             console.log(`>> Map scrolled: ${JSON.stringify(point)}`);
           });
 
-          this.mapbox.setOnFlingListener(() => {
-            console.log(`>> Map flinged"}`);
-          }).catch(err => console.log(err));
+          this.mapbox
+            .setOnFlingListener(() => {
+              console.log(`>> Map flinged"}`);
+            })
+            .catch(err => console.log(err));
         },
         (error: string) => {
           console.log("mapbox show error: " + error);
         }
-    );
+      );
   }
 
   public doHide(): void {
     this.mapbox.hide().then(
-        () => {
-          console.log("Mapbox hide done");
-        },
-        (error: string) => {
-          console.log("mapbox hide error: " + error);
-        }
+      () => {
+        console.log("Mapbox hide done");
+      },
+      (error: string) => {
+        console.log("mapbox hide error: " + error);
+      }
     );
   }
 
   public doDestroy(): void {
     this.mapbox.destroy().then(
-        () => {
-          console.log("Mapbox destroyed");
-        },
-        (error: string) => {
-          console.log("mapbox destroy error: " + error);
-        }
+      () => {
+        console.log("Mapbox destroyed");
+      },
+      (error: string) => {
+        console.log("mapbox destroy error: " + error);
+      }
     );
   }
 
   public doUnhide(): void {
     this.mapbox.unhide().then(
-        () => {
-          console.log("Mapbox doUnhide done");
-        },
-        (error: string) => {
-          console.log("mapbox doUnhide error: " + error);
-        }
+      () => {
+        console.log("Mapbox doUnhide done");
+      },
+      (error: string) => {
+        console.log("mapbox doUnhide error: " + error);
+      }
     );
   }
 
   public doRemoveAllMarkers(): void {
-    this.mapbox.removeMarkers(
-    ).then(
-        () => {
-          console.log("Mapbox doRemoveAllMarkers done");
-        },
-        (error: string) => {
-          console.log("mapbox doRemoveAllMarkers error: " + error);
-        }
+    this.mapbox.removeMarkers().then(
+      () => {
+        console.log("Mapbox doRemoveAllMarkers done");
+      },
+      (error: string) => {
+        console.log("mapbox doRemoveAllMarkers error: " + error);
+      }
     );
   }
 
   public doRemove2Markers(): void {
-    this.mapbox.removeMarkers([
-      1,
-      2
-    ]).then(
-        () => {
-          console.log("Mapbox doRemove2Markers done");
-        },
-        (error: string) => {
-          console.log("mapbox doRemove2Markers error: " + error);
-        }
+    this.mapbox.removeMarkers([1, 2]).then(
+      () => {
+        console.log("Mapbox doRemove2Markers done");
+      },
+      (error: string) => {
+        console.log("mapbox doRemove2Markers error: " + error);
+      }
     );
   }
 
@@ -146,113 +162,118 @@ export class HelloWorldModel extends Observable {
       alert(`Marker callout tapped with title: ${marker.title}`);
     };
 
-    this.mapbox.addMarkers([
-      {
-        id: 2,
-        lat: 52.3602160,
-        lng: 4.8891680,
-        title: 'One-line title here', // no popup unless set
-        subtitle: 'With a res://icon-40 image',
-        icon: isIOS ? 'res://icon-40' : 'res://icon',
-        selected: false,
-        onTap: onTap,
-        onCalloutTap: onCalloutTap
-      },
-      {
-        // this is a marker without a popup (because no title/subtitle are set)
-        id: 3,
-        lat: 52.3602160,
-        lng: 5,
-        onTap: () => console.log("Titleless marker tapped!"),
-        icon: 'http://www.bme.be/wp-content/uploads/2014/04/marker.png'
-      },
-      {
-        id: 4,
-        lat: 52.3602160,
-        lng: 4.7891680,
-        title: 'One-line title here 3', // no popup unless set
-        subtitle: 'And a one-liner here as well.',
-        iconPath: 'res/markers/home_marker.png',
-        selected: true,
-        onTap: onTap,
-        onCalloutTap: onCalloutTap
-      },
-      {
-        id: 5,
-        lat: 52.4,
-        lng: 5.1,
-        title: 'This title is cut off on iOS, but multi-line on Android', // no popup unless set
-        subtitle: 'Same for this subtitle. Same for this subtitle. Same for this subtitle. Same for this subtitle. Same for this subtitle.',
-        icon: 'http://maryjanewa.com/wp-content/uploads/2016/01/map-marker.png',
-        onTap: () => console.log("Marker tapped"),
-        onCalloutTap: () => console.log("Marker callout tapped")
-      }
-    ]).then(
+    this.mapbox
+      .addMarkers([
+        {
+          id: 2,
+          lat: 52.360216,
+          lng: 4.889168,
+          title: "One-line title here", // no popup unless set
+          subtitle: "With a res://icon-40 image",
+          icon: isIOS ? "res://icon-40" : "res://icon",
+          selected: false,
+          onTap: onTap,
+          onCalloutTap: onCalloutTap
+        },
+        {
+          // this is a marker without a popup (because no title/subtitle are set)
+          id: 3,
+          lat: 52.360216,
+          lng: 5,
+          onTap: () => console.log("Titleless marker tapped!"),
+          icon: "http://www.bme.be/wp-content/uploads/2014/04/marker.png"
+        },
+        {
+          id: 4,
+          lat: 52.360216,
+          lng: 4.789168,
+          title: "One-line title here 3", // no popup unless set
+          subtitle: "And a one-liner here as well.",
+          iconPath: "res/markers/home_marker.png",
+          selected: true,
+          onTap: onTap,
+          onCalloutTap: onCalloutTap
+        },
+        {
+          id: 5,
+          lat: 52.4,
+          lng: 5.1,
+          title: "This title is cut off on iOS, but multi-line on Android", // no popup unless set
+          subtitle:
+            "Same for this subtitle. Same for this subtitle. Same for this subtitle. Same for this subtitle. Same for this subtitle.",
+          icon:
+            "http://maryjanewa.com/wp-content/uploads/2016/01/map-marker.png",
+          onTap: () => console.log("Marker tapped"),
+          onCalloutTap: () => console.log("Marker callout tapped")
+        }
+      ])
+      .then(
         () => console.log("Mapbox addMarkers done"),
         (error: string) => console.log("mapbox addMarkers error: " + error)
-    );
+      );
   }
 
   public doGetViewport(): void {
     this.mapbox.getViewport().then(
-        (result: Viewport) => {
-          let alertOptions: AlertOptions = {
-            title: "Viewport determined",
-            message: JSON.stringify(result),
-            okButtonText: "OK"
-          };
-          alert(alertOptions);
-        },
-        (error: string) => console.log("mapbox doGetViewport error: " + error)
+      (result: Viewport) => {
+        let alertOptions: AlertOptions = {
+          title: "Viewport determined",
+          message: JSON.stringify(result),
+          okButtonText: "OK"
+        };
+        alert(alertOptions);
+      },
+      (error: string) => console.log("mapbox doGetViewport error: " + error)
     );
   }
 
   public doSetViewport(): void {
-    this.mapbox.setViewport(
-      {
+    this.mapbox
+      .setViewport({
         bounds: {
-          north: 52.4820,
+          north: 52.482,
           east: 5.1087,
           south: 52.2581,
           west: 4.6816
         },
         animated: true // default true
-      }
-    ).then(
-      () => {
-        console.log("Viewport set");
-      },
-      (error: string) => {
-        console.log("mapbox doSetViewport error: " + error);
-      }
+      })
+      .then(
+        () => {
+          console.log("Viewport set");
+        },
+        (error: string) => {
+          console.log("mapbox doSetViewport error: " + error);
+        }
       );
   }
 
   // Add an option to download the current viewport: https://www.mapbox.com/ios-sdk/examples/offline-pack/ (look for visibleCoordinateBounds)
   public doDownloadAmsterdam(): void {
-    this.mapbox.downloadOfflineRegion(
-        {
-          // required for Android in case no map has been shown yet
-          accessToken: ACCESS_TOKEN,
-          name: "Amsterdam",
-          style: MapStyle.OUTDOORS,
-          minZoom: 9,
-          maxZoom: 11,
-          bounds: {
-            north: 52.4820,
-            east: 5.1087,
-            south: 52.2581,
-            west: 4.6816
-          },
-          onProgress: (progress: DownloadProgress) => {
-            console.log(`Download progress: ${JSON.stringify(progress)}`);
-          }
+    this.mapbox
+      .downloadOfflineRegion({
+        // required for Android in case no map has been shown yet
+        accessToken: ACCESS_TOKEN,
+        name: "Amsterdam",
+        style: MapStyle.OUTDOORS,
+        minZoom: 9,
+        maxZoom: 11,
+        bounds: {
+          north: 52.482,
+          east: 5.1087,
+          south: 52.2581,
+          west: 4.6816
+        },
+        onProgress: (progress: DownloadProgress) => {
+          console.log(`Download progress: ${JSON.stringify(progress)}`);
         }
-    ).then(
+      })
+      .then(
         () => {
           let alertOptions: AlertOptions = {
             title: "Offline region downloaded",
-            message: "Done! Zoom levels 9-11 have been downloaded. The download progress was reported via console.log",
+            message:
+              "Done! Zoom levels 9-11 have been downloaded. The download progress was reported via console.log",
             okButtonText: "OK"
           };
           alert(alertOptions);
@@ -260,7 +281,7 @@ export class HelloWorldModel extends Observable {
         (error: string) => {
           console.log("mapbox doDownloadAmsterdam error: " + error);
         }
-    );
+      );
 
     let alertOptions: AlertOptions = {
       title: "Be patient",
@@ -272,30 +293,36 @@ export class HelloWorldModel extends Observable {
 
   public doDownloadCurrentViewportAsOfflineRegion(): void {
     this.mapbox.getViewport().then(
-        (viewport: Viewport) => {
-          this.mapbox.downloadOfflineRegion(
-              {
-                name: "LastViewport",
-                style: MapStyle.OUTDOORS,
-                minZoom: viewport.zoomLevel,
-                maxZoom: viewport.zoomLevel + 2,
-                bounds: viewport.bounds,
-                onProgress: (progress: DownloadProgress) => {
-                  console.log(`Download progress: ${JSON.stringify(progress)}`);
-                }
-              }
-          ).then(
-              () => {
-                let alertOptions: AlertOptions = {
-                  title: "Viewport downloaded",
-                  message: `Downloaded viewport with bounds ${JSON.stringify(viewport.bounds)} at zoom levels ${viewport.zoomLevel} - ${(viewport.zoomLevel + 2)}`,
-                  okButtonText: "OK :)"
-                };
-                alert(alertOptions);
-              },
-              (error: string) => {
-                console.log("mapbox doDownloadCurrentViewportAsOfflineRegion error: " + error);
-              }
+      (viewport: Viewport) => {
+        this.mapbox
+          .downloadOfflineRegion({
+            name: "LastViewport",
+            style: MapStyle.OUTDOORS,
+            minZoom: viewport.zoomLevel,
+            maxZoom: viewport.zoomLevel + 2,
+            bounds: viewport.bounds,
+            onProgress: (progress: DownloadProgress) => {
+              console.log(`Download progress: ${JSON.stringify(progress)}`);
+            }
+          })
+          .then(
+            () => {
+              let alertOptions: AlertOptions = {
+                title: "Viewport downloaded",
+                message: `Downloaded viewport with bounds ${JSON.stringify(
+                  viewport.bounds
+                )} at zoom levels ${viewport.zoomLevel} - ${viewport.zoomLevel +
+                  2}`,
+                okButtonText: "OK :)"
+              };
+              alert(alertOptions);
+            },
+            (error: string) => {
+              console.log(
+                "mapbox doDownloadCurrentViewportAsOfflineRegion error: " +
+                  error
+              );
+            }
           );
       },
       (error: string) => {
@@ -305,12 +332,13 @@ export class HelloWorldModel extends Observable {
           okButtonText: "Got it"
         };
         alert(alertOptions);
-      });
+      }
+    );
   }
 
   public doAddAndClusterGeoJSON(): void {
-    this.mapbox.addGeoJsonClustered(
-      {
+    this.mapbox
+      .addGeoJsonClustered({
         name: "earthquakes",
         data: "https://www.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson",
         clusterMaxZoom: 15,
@@ -318,39 +346,39 @@ export class HelloWorldModel extends Observable {
         // clusters: [
         //   {}
         // ]
-      }
-    ).then(
-      () => {
-        let alertOptions: AlertOptions = {
-          title: "GeoJSON added",
-          message: "Moving to the USA as that's where the GeoJson data is drawn",
-          okButtonText: "OK"
-        };
-        alert(alertOptions).then(
-          () => {
-            this.mapbox.setViewport(
-              {
-                animated: true,
-                bounds: {
-                  north: 52.9,
-                  east: -62.2,
-                  south: 22.1,
-                  west: -128.2
-                }
+      })
+      .then(
+        () => {
+          let alertOptions: AlertOptions = {
+            title: "GeoJSON added",
+            message:
+              "Moving to the USA as that's where the GeoJson data is drawn",
+            okButtonText: "OK"
+          };
+          alert(alertOptions).then(() => {
+            this.mapbox.setViewport({
+              animated: true,
+              bounds: {
+                north: 52.9,
+                east: -62.2,
+                south: 22.1,
+                west: -128.2
               }
-            );
+            });
           });
-      },
-      (error: string) => {
-        console.log("mapbox doAddAndClusterGeoJSON error: " + error);
-      }
+        },
+        (error: string) => {
+          console.log("mapbox doAddAndClusterGeoJSON error: " + error);
+        }
       );
   }
 
   public doListOfflineRegions(): void {
-    this.mapbox.listOfflineRegions({
-      accessToken: ACCESS_TOKEN
-    }).then(
+    this.mapbox
+      .listOfflineRegions({
+        accessToken: ACCESS_TOKEN
+      })
+      .then(
         (regions: Array<OfflineRegion>) => {
           let alertOptions: AlertOptions = {
             title: "Offline regions",
@@ -367,13 +395,15 @@ export class HelloWorldModel extends Observable {
           };
           alert(alertOptions);
         }
-    );
+      );
   }
 
   public doDeleteOfflineRegion(): void {
-    this.mapbox.deleteOfflineRegion({
-      name: "Amsterdam"
-    }).then(
+    this.mapbox
+      .deleteOfflineRegion({
+        name: "Amsterdam"
+      })
+      .then(
         () => {
           let alertOptions: AlertOptions = {
             title: "Offline region deleted",
@@ -389,94 +419,94 @@ export class HelloWorldModel extends Observable {
           };
           alert(alertOptions);
         }
-    );
+      );
   }
 
   public doGetTilt(): void {
     this.mapbox.getTilt().then(
-        (result: number) => {
-          let alertOptions: AlertOptions = {
-            title: "Tilt / pitch",
-            message: "" + result,
-            okButtonText: "OK"
-          };
-          alert(alertOptions);
-        },
-        (error: string) => {
-          console.log("mapbox getTilt error: " + error);
-        }
+      (result: number) => {
+        let alertOptions: AlertOptions = {
+          title: "Tilt / pitch",
+          message: "" + result,
+          okButtonText: "OK"
+        };
+        alert(alertOptions);
+      },
+      (error: string) => {
+        console.log("mapbox getTilt error: " + error);
+      }
     );
   }
 
   public doGetUserLocation(): void {
     this.mapbox.getUserLocation().then(
-        location => {
-          let alertOptions: AlertOptions = {
-            title: "User location",
-            message: JSON.stringify(location),
-            okButtonText: "Thanks!"
-          };
-          alert(alertOptions);
-        },
-        (error: string) => {
-          console.log("mapbox getUserLocation error: " + error);
-        }
+      location => {
+        let alertOptions: AlertOptions = {
+          title: "User location",
+          message: JSON.stringify(location),
+          okButtonText: "Thanks!"
+        };
+        alert(alertOptions);
+      },
+      (error: string) => {
+        console.log("mapbox getUserLocation error: " + error);
+      }
     );
   }
 
   public doSetTilt(): void {
-    this.mapbox.setTilt(
-      {
+    this.mapbox
+      .setTilt({
         tilt: 35,
         duration: 4000
-      }
-    ).then(
-      () => {
-        console.log("Mapbox doSetTilt done");
-      },
-      (error: string) => {
-        console.log("mapbox doSetTilt error: " + error);
-      }
+      })
+      .then(
+        () => {
+          console.log("Mapbox doSetTilt done");
+        },
+        (error: string) => {
+          console.log("mapbox doSetTilt error: " + error);
+        }
       );
   }
 
   public doAnimateCamera(): void {
-    this.mapbox.animateCamera(
-      {
+    this.mapbox
+      .animateCamera({
         target: {
-          lat: 52.3732160,
-          lng: 4.8941680,
+          lat: 52.373216,
+          lng: 4.894168
         },
         zoomLevel: 17, // Android
         altitude: 500, // iOS
         bearing: 270,
         tilt: 50,
         duration: 10000
-      }
-    ).then(
-      result => {
-        console.log("Mapbox doAnimateCamera done");
-      },
-      (error: string) => {
-        console.log("mapbox doAnimateCamera error: " + error);
-      }
+      })
+      .then(
+        result => {
+          console.log("Mapbox doAnimateCamera done");
+        },
+        (error: string) => {
+          console.log("mapbox doAnimateCamera error: " + error);
+        }
       );
   }
 
   public doSetCenter(): void {
-    this.mapbox.setCenter(
-      {
-        lat: 52.3602160,
-        lng: 4.8891680,
+    this.mapbox
+      .setCenter({
+        lat: 52.360216,
+        lng: 4.889168,
         animated: true
-      }
-    ).then(
-      result => {
-        console.log("Mapbox setCenter done");
-      },
-      (error: string) => {
-        console.log("mapbox setCenter error: " + error);
-      }
+      })
+      .then(
+        result => {
+          console.log("Mapbox setCenter done");
+        },
+        (error: string) => {
+          console.log("mapbox setCenter error: " + error);
+        }
       );
   }
 
@@ -513,150 +543,151 @@ export class HelloWorldModel extends Observable {
   }
 
   public doSetZoomLevel(): void {
-    this.mapbox.setZoomLevel(
-      {
+    this.mapbox
+      .setZoomLevel({
         level: 2, // shows most of the world
         animated: true
-      }
-    ).then(
-      result => {
-        console.log("Mapbox setZoomLevel done");
-      },
-      (error: string) => {
-        console.log("mapbox setZoomLevel error: " + error);
-      }
+      })
+      .then(
+        result => {
+          console.log("Mapbox setZoomLevel done");
+        },
+        (error: string) => {
+          console.log("mapbox setZoomLevel error: " + error);
+        }
       );
   }
 
   public doAddPolygon(): void {
-    this.mapbox.addPolygon({
-      fillColor: new Color("red"),
-      strokeColor: new Color("blue"),
-      points: [
-        {
-          lat: 52.3832160,
-          lng: 4.8991680
+    this.mapbox
+      .addPolygon({
+        fillColor: new Color("red"),
+        strokeColor: new Color("blue"),
+        points: [
+          {
+            lat: 52.383216,
+            lng: 4.899168
+          },
+          {
+            lat: 52.363216,
+            lng: 4.901168
+          },
+          {
+            lat: 52.393216,
+            lng: 4.891168
+          }
+        ]
+      })
+      .then(
+        result => {
+          console.log("Mapbox addPolygon done");
         },
-        {
-          lat: 52.3632160,
-          lng: 4.9011680
-        },
-        {
-          lat: 52.3932160,
-          lng: 4.8911680
+        (error: string) => {
+          console.log("mapbox addPolygon error: " + error);
         }
-      ]
-    }).then(
-      result => {
-        console.log("Mapbox addPolygon done");
-      },
-      (error: string) => {
-        console.log("mapbox addPolygon error: " + error);
-      }
       );
   }
 
   public doAddPolyline(): void {
-    this.mapbox.addPolyline({
-      id: 1,
-      color: "#30BCFF",
-      width: 5,
-      opacity: 0.6,
-      points: [
-        {
-          lat: 52.3923633,
-          lng: 4.9026489
-        },
-        {
-          lat: 52.3709879,
-          lng: 4.9555206
-        },
-        {
-          lat: 52.3542155,
-          lng: 4.9308013
-        },
-        {
-          lat: 52.3537961,
-          lng: 4.8799896
-        },
-        {
-          lat: 52.3701494,
-          lng: 4.8360443
-        },
-        {
-          lat: 52.3864966,
-          lng: 4.8621368
-        },
-        {
-          lat: 52.3848202,
-          lng: 4.8868560
-        }
-      ]
-    }).then(
+    this.mapbox
+      .addPolyline({
+        id: 1,
+        color: "#30BCFF",
+        width: 5,
+        opacity: 0.6,
+        points: [
+          {
+            lat: 52.3923633,
+            lng: 4.9026489
+          },
+          {
+            lat: 52.3709879,
+            lng: 4.9555206
+          },
+          {
+            lat: 52.3542155,
+            lng: 4.9308013
+          },
+          {
+            lat: 52.3537961,
+            lng: 4.8799896
+          },
+          {
+            lat: 52.3701494,
+            lng: 4.8360443
+          },
+          {
+            lat: 52.3864966,
+            lng: 4.8621368
+          },
+          {
+            lat: 52.3848202,
+            lng: 4.886856
+          }
+        ]
+      })
+      .then(
         result => {
           console.log("Mapbox addPolyline done");
         },
         (error: string) => {
           console.log("mapbox addPolyline error: " + error);
         }
-    );
+      );
   }
 
   public doRemovePolyline(): void {
     this.mapbox.removePolylines([1]).then(
-        result => {
-          console.log("Mapbox removePolylines done");
-        },
-        (error: string) => {
-          console.log("mapbox removePolylines error: " + error);
-        }
+      result => {
+        console.log("Mapbox removePolylines done");
+      },
+      (error: string) => {
+        console.log("mapbox removePolylines error: " + error);
+      }
     );
   }
 
   public doCheckHasFineLocationPermission(): void {
-    this.mapbox.hasFineLocationPermission().then(
-      (granted: boolean) => {
-        let alertOptions: AlertOptions = {
-          title: "Permission granted?",
-          message: granted ? "YES" : "NO",
-          okButtonText: "OK"
-        };
-        alert(alertOptions);
-      }
-    );
+    this.mapbox.hasFineLocationPermission().then((granted: boolean) => {
+      let alertOptions: AlertOptions = {
+        title: "Permission granted?",
+        message: granted ? "YES" : "NO",
+        okButtonText: "OK"
+      };
+      alert(alertOptions);
+    });
   }
 
   public doRequestFineLocationPermission(): void {
-    this.mapbox.requestFineLocationPermission().then(
-      () => {
-        console.log("Fine Location permission requested");
-      }
-    );
+    this.mapbox.requestFineLocationPermission().then(() => {
+      console.log("Fine Location permission requested");
+    });
   }
 
   public onMapClick(e: GestureEventData): void {
     if (e.ios) {
       let view: MapboxView;
       view = e.view as MapboxView;
-      var point = e.ios.locationInView(e.view.nativeView);
-      var features = view.getFeaturesAtPoint(point, ["departments"]);
+      let point = e.ios.locationInView(e.view.nativeView);
+      let features = view.getFeaturesAtPoint(point, ["departments"]);
       if (features)
-        features.forEach((f) => {
+        features.forEach(f => {
           console.dir(f);
           console.dir(f.properties);
         });
 
       if (features && features.length > 0) {
-        var viewportFeatures = view.getFeaturesInViewport(["departments"]);
+        let viewportFeatures = view.getFeaturesInViewport(["departments"]);
         if (viewportFeatures)
-          viewportFeatures.forEach((f) => {
+          viewportFeatures.forEach(f => {
             console.dir(f);
             console.dir(f.properties);
           });
       }
-    }
-    else {
-      console.error("We expected Android to call the click handler setup in onMapReady");
+    } else {
+      console.error(
+        "We expected Android to call the click handler setup in onMapReady"
+      );
     }
     console.log("clicked");
   }

@@ -20,7 +20,11 @@ function onMapReady(args) {
 
   // you can tap into the native MapView objects (MGLMapView for iOS and com.mapbox.mapboxsdk.maps.MapView for Android)
   const nativeMapView = args.ios ? args.ios : args.android;
-  console.log(`Mapbox onMapReady for ${args.ios ? "iOS" : "Android"}, native object received: ${nativeMapView}`);
+  console.log(
+    `Mapbox onMapReady for ${
+      args.ios ? "iOS" : "Android"
+    }, native object received: ${nativeMapView}`
+  );
 
   map.setOnMapClickListener((point: LatLng) => {
     console.log(`~~~~~ Map clicked: ${JSON.stringify(point)}`);
@@ -31,40 +35,45 @@ function onMapReady(args) {
     console.log(`~~~~~ Map scrolled: ${JSON.stringify(point)}`);
   });
 
+  map.setOnCameraMoveCancelListener(() => {
+    console.log(`~~~~~ Map CameraMoveCancel`);
+  });
+  map.setOnCameraMoveListener(() => {
+    console.log(`~~~~~ Map CameraMove`);
+  });
   // .. or use the convenience methods exposed on args.map, for instance:
   map.addMarkers([
     {
       id: 2,
-      lat: 52.3602160,
-      lng: 4.8891680,
-      title: 'One-line title here', // no popup unless set
-      subtitle: 'Really really nice location',
-      iconPath: 'res/markers/green_pin_marker.png',
+      lat: 52.360216,
+      lng: 4.889168,
+      title: "One-line title here", // no popup unless set
+      subtitle: "Really really nice location",
+      iconPath: "res/markers/green_pin_marker.png",
       onTap: () => {
         console.log("'Nice location' marker tapped");
       },
       onCalloutTap: () => {
         console.log("'Nice location' marker callout tapped");
       }
-    }]
-  );
+    }
+  ]);
 
   setTimeout(() => {
     map.setOnMapClickListener((point: LatLng) => {
       console.log(`Map clicked: ${JSON.stringify(point)}`);
-      var features = map.getFeaturesAtLatLng(point, ["departments"]);
+      let features = map.getFeaturesAtLatLng(point, ["departments"]);
       console.dir(features);
 
       try {
-      var viewportFeatures = map.getFeaturesInViewport(["departments"]);
-      console.dir(viewportFeatures);
-    }
-    catch (ex) {
-      console.log(ex);
-    }
+        let viewportFeatures = map.getFeaturesInViewport(["departments"]);
+        console.dir(viewportFeatures);
+      } catch (ex) {
+        console.log(ex);
+      }
     });
 
-/*
+    /*
     map.setViewport(
         {
           bounds: {
@@ -78,7 +87,7 @@ function onMapReady(args) {
     );*/
   }, 3000);
 
-/*
+  /*
   setTimeout(() => {
     map.setMapStyle(MapStyle.DARK);
   }, 5000);

@@ -1,4 +1,8 @@
-import { View, Property, booleanConverter } from "tns-core-modules/ui/core/view";
+import {
+  View,
+  Property,
+  booleanConverter
+} from "tns-core-modules/ui/core/view";
 import { Color } from "tns-core-modules/color/color";
 
 export enum MapStyle {
@@ -159,9 +163,7 @@ export interface AddGeoJsonClusteredOptions {
   clusters?: Array<MapboxCluster>;
 }
 
-export interface AddExtrusionOptions {
-
-}
+export interface AddExtrusionOptions {}
 
 export interface OfflineRegion {
   name: string;
@@ -201,30 +203,30 @@ export interface ListOfflineRegionsOptions {
 }
 
 export interface Feature {
-  id:number;
-  type:string;
-  properties:any;
-  geometry:GeometryShape;
+  id: number;
+  type: string;
+  properties: any;
+  geometry: GeometryShape;
 }
 
 export enum GeometryType {
-    Point = <any>"Point",
-    MultiPoint = <any>"MultiPoint",
-    LineString = <any>"LineString",
-    MultiLineString = <any>"MultiLineString",
-    Polygon = <any>"Polygon",
-    MultiPolygon = <any>"MultiPolygon",
-    GeometryCollection = <any>"GeometryCollection",
+  Point = <any>"Point",
+  MultiPoint = <any>"MultiPoint",
+  LineString = <any>"LineString",
+  MultiLineString = <any>"MultiLineString",
+  Polygon = <any>"Polygon",
+  MultiPolygon = <any>"MultiPolygon",
+  GeometryCollection = <any>"GeometryCollection"
 }
 
 export interface GeometryShape {
-    type: GeometryType;
-    coordinates: number[];
+  type: GeometryType;
+  coordinates: number[];
 }
 
 export interface MapPoint {
-  x:number;
-  y:number;
+  x: number;
+  y: number;
 }
 /**
  * The options object passed into the show function.
@@ -280,12 +282,10 @@ export interface ShowOptions {
 }
 
 export interface ShowResult {
-  ios: any
+  ios: any;
   /* MGLMapView */
-  ;
-  android: any
+  android: any;
   /* com.mapbox.mapboxsdk.maps.MapView */
-  ;
 }
 
 export interface AnimateCameraOptions {
@@ -346,15 +346,24 @@ export interface MapboxApi {
 
   animateCamera(options: AnimateCameraOptions, nativeMap?: any): Promise<any>;
 
-  setOnMapClickListener(listener: (data: LatLng) => void, nativeMap?): Promise<any>;
+  setOnMapClickListener(
+    listener: (data: LatLng) => void,
+    nativeMap?
+  ): Promise<any>;
 
-  setOnScrollListener(listener: (data?: LatLng) => void, nativeMap?: any): Promise<any>;
+  setOnScrollListener(
+    listener: (data?: LatLng) => void,
+    nativeMap?: any
+  ): Promise<any>;
 
   setOnFlingListener(listener: () => void, nativeMap?: any): Promise<any>;
 
   setOnCameraMoveListener(listener: () => void, nativeMap?: any): Promise<any>;
 
-  setOnCameraMoveCancelListener(listener: () => void, nativeMap?: any): Promise<any>;
+  setOnCameraMoveCancelListener(
+    listener: () => void,
+    nativeMap?: any
+  ): Promise<any>;
 
   setOnCameraIdleListener(listener: () => void, nativeMap?: any): Promise<any>;
 
@@ -368,21 +377,33 @@ export interface MapboxApi {
 
   downloadOfflineRegion(options: DownloadOfflineRegionOptions): Promise<any>;
 
-  listOfflineRegions(options?: ListOfflineRegionsOptions): Promise<Array<OfflineRegion>>;
+  listOfflineRegions(
+    options?: ListOfflineRegionsOptions
+  ): Promise<Array<OfflineRegion>>;
 
   deleteOfflineRegion(options: DeleteOfflineRegionOptions): Promise<any>;
 
   addGeoJsonClustered(options: AddGeoJsonClusteredOptions): Promise<any>;
 
-// addExtrusion(options: AddExtrusionOptions): Promise<any>;
+  // addExtrusion(options: AddExtrusionOptions): Promise<any>;
 
-  getFeaturesAtPoint(data:MapPoint, layers:string[], nativeMap?):Feature[];
-  getFeaturesAtLatLng(data:LatLng, layers:string[], nativeMap?):Feature[];
+  getFeaturesAtPoint(data: MapPoint, layers: string[], nativeMap?): Feature[];
+  getFeaturesAtLatLng(data: LatLng, layers: string[], nativeMap?): Feature[];
 
-  getFeaturesInPointRect(northeast:MapPoint, southwest:MapPoint, layers:string[], nativeMap?):Feature[];
-  getFeaturesInLatLngRect(northeast:LatLng, southwest:LatLng, layers:string[], nativeMap?):Feature[];
+  getFeaturesInPointRect(
+    northeast: MapPoint,
+    southwest: MapPoint,
+    layers: string[],
+    nativeMap?
+  ): Feature[];
+  getFeaturesInLatLngRect(
+    northeast: LatLng,
+    southwest: LatLng,
+    layers: string[],
+    nativeMap?
+  ): Feature[];
 
-  getFeaturesInViewport(layers:string[], nativeMap?): Feature[];
+  getFeaturesInViewport(layers: string[], nativeMap?): Feature[];
 }
 
 export abstract class MapboxCommon implements MapboxCommonApi {
@@ -407,17 +428,21 @@ export abstract class MapboxCommon implements MapboxCommonApi {
     delay: 0
   };
 
-  public static merge(obj1: {}, obj2: {}): any { // Our merge function
+  public static merge(obj1: {}, obj2: {}): any {
+    // Our merge function
     let result = {}; // return result
-    for (let i in obj1) {      // for every property in obj1
-      if ((i in obj2) && (typeof obj1[i] === "object") && (i !== null)) {
+    for (let i in obj1) {
+      // for every property in obj1
+      if (i in obj2 && typeof obj1[i] === "object" && i !== null) {
         result[i] = this.merge(obj1[i], obj2[i]); // if it's an object, merge
       } else {
         result[i] = obj1[i]; // add it to result
       }
     }
-    for (let i in obj2) { // add the remaining properties from object 2
-      if (i in result) { // conflict
+    for (let i in obj2) {
+      // add the remaining properties from object 2
+      if (i in result) {
+        // conflict
         continue;
       }
       result[i] = obj2[i];
@@ -485,15 +510,23 @@ export interface MapboxViewApi {
 
   destroy(): Promise<any>;
 
-  getFeaturesAtPoint(data:MapPoint, layers:string[]):Feature[];
-  getFeaturesAtLatLng(data:LatLng, layers:string[]):Feature[];
-  getFeaturesInPointRect(northeast:MapPoint, southwest:MapPoint, layers:string[]):Feature[];
-  getFeaturesInLatLngRect(northeast:LatLng, southwest:LatLng, layers:string[]):Feature[];
-  getFeaturesInViewport(layers:string[]): Feature[];
-
+  getFeaturesAtPoint(data: MapPoint, layers: string[]): Feature[];
+  getFeaturesAtLatLng(data: LatLng, layers: string[]): Feature[];
+  getFeaturesInPointRect(
+    northeast: MapPoint,
+    southwest: MapPoint,
+    layers: string[]
+  ): Feature[];
+  getFeaturesInLatLngRect(
+    northeast: LatLng,
+    southwest: LatLng,
+    layers: string[]
+  ): Feature[];
+  getFeaturesInViewport(layers: string[]): Feature[];
 }
 
-export abstract class MapboxViewCommonBase extends View implements MapboxViewApi {
+export abstract class MapboxViewCommonBase extends View
+  implements MapboxViewApi {
   protected mapbox: MapboxApi;
 
   abstract getNativeMapView(): any;
@@ -510,7 +543,10 @@ export abstract class MapboxViewCommonBase extends View implements MapboxViewApi
     return this.mapbox.setOnMapClickListener(listener, this.getNativeMapView());
   }
 
-  setOnScrollListener(listener: (data?: LatLng) => void, nativeMap?: any): Promise<any> {
+  setOnScrollListener(
+    listener: (data?: LatLng) => void,
+    nativeMap?: any
+  ): Promise<any> {
     return this.mapbox.setOnScrollListener(listener, this.getNativeMapView());
   }
 
@@ -519,15 +555,27 @@ export abstract class MapboxViewCommonBase extends View implements MapboxViewApi
   }
 
   setOnCameraMoveListener(listener: () => void, nativeMap?: any): Promise<any> {
-    return this.mapbox.setOnCameraMoveListener(listener, this.getNativeMapView());
+    return this.mapbox.setOnCameraMoveListener(
+      listener,
+      this.getNativeMapView()
+    );
   }
 
-  setOnCameraMoveCancelListener(listener: () => void, nativeMap?: any): Promise<any> {
-    return this.mapbox.setOnCameraMoveCancelListener(listener, this.getNativeMapView());
+  setOnCameraMoveCancelListener(
+    listener: () => void,
+    nativeMap?: any
+  ): Promise<any> {
+    return this.mapbox.setOnCameraMoveCancelListener(
+      listener,
+      this.getNativeMapView()
+    );
   }
 
   setOnCameraIdleListener(listener: () => void, nativeMap?: any): Promise<any> {
-    return this.mapbox.setOnCameraIdleListener(listener, this.getNativeMapView());
+    return this.mapbox.setOnCameraIdleListener(
+      listener,
+      this.getNativeMapView()
+    );
   }
 
   getViewport(): Promise<Viewport> {
@@ -590,40 +638,77 @@ export abstract class MapboxViewCommonBase extends View implements MapboxViewApi
     return this.mapbox.destroy(this.getNativeMapView());
   }
 
-  getFeaturesAtPoint(data:MapPoint, layers:string[]):Feature[] {
-    return this.mapbox.getFeaturesAtPoint(data,layers,this.getNativeMapView());
+  getFeaturesAtPoint(data: MapPoint, layers: string[]): Feature[] {
+    return this.mapbox.getFeaturesAtPoint(
+      data,
+      layers,
+      this.getNativeMapView()
+    );
   }
-  getFeaturesAtLatLng(data:LatLng, layers:string[]):Feature[] {
-    return this.mapbox.getFeaturesAtLatLng(data,layers, this.getNativeMapView());
+  getFeaturesAtLatLng(data: LatLng, layers: string[]): Feature[] {
+    return this.mapbox.getFeaturesAtLatLng(
+      data,
+      layers,
+      this.getNativeMapView()
+    );
   }
-  getFeaturesInPointRect(northeast:MapPoint, southwest:MapPoint, layers:string[]):Feature[] {
-    return this.mapbox.getFeaturesInPointRect(northeast,southwest,this.getNativeMapView());
+  getFeaturesInPointRect(
+    northeast: MapPoint,
+    southwest: MapPoint,
+    layers: string[]
+  ): Feature[] {
+    return this.mapbox.getFeaturesInPointRect(
+      northeast,
+      southwest,
+      this.getNativeMapView()
+    );
   }
-  getFeaturesInLatLngRect(northeast:LatLng, southwest:LatLng, layers:string[]):Feature[] {
-    return this.mapbox.getFeaturesInLatLngRect(northeast,southwest,layers,this.getNativeMapView());
+  getFeaturesInLatLngRect(
+    northeast: LatLng,
+    southwest: LatLng,
+    layers: string[]
+  ): Feature[] {
+    return this.mapbox.getFeaturesInLatLngRect(
+      northeast,
+      southwest,
+      layers,
+      this.getNativeMapView()
+    );
   }
-  getFeaturesInViewport(layers:string[]): Feature[] {
-    return this.mapbox.getFeaturesInViewport(layers,this.getNativeMapView());
+  getFeaturesInViewport(layers: string[]): Feature[] {
+    return this.mapbox.getFeaturesInViewport(layers, this.getNativeMapView());
   }
-
 }
 
-export const zoomLevelProperty = new Property<MapboxViewCommonBase, number>({name: "zoomLevel"});
+export const zoomLevelProperty = new Property<MapboxViewCommonBase, number>({
+  name: "zoomLevel"
+});
 zoomLevelProperty.register(MapboxViewCommonBase);
 
-export const accessTokenProperty = new Property<MapboxViewCommonBase, string>({name: "accessToken"});
+export const accessTokenProperty = new Property<MapboxViewCommonBase, string>({
+  name: "accessToken"
+});
 accessTokenProperty.register(MapboxViewCommonBase);
 
-export const mapStyleProperty = new Property<MapboxViewCommonBase, string>({name: "mapStyle"});
+export const mapStyleProperty = new Property<MapboxViewCommonBase, string>({
+  name: "mapStyle"
+});
 mapStyleProperty.register(MapboxViewCommonBase);
 
-export const latitudeProperty = new Property<MapboxViewCommonBase, number>({name: "latitude"});
+export const latitudeProperty = new Property<MapboxViewCommonBase, number>({
+  name: "latitude"
+});
 latitudeProperty.register(MapboxViewCommonBase);
 
-export const longitudeProperty = new Property<MapboxViewCommonBase, number>({name: "longitude"});
+export const longitudeProperty = new Property<MapboxViewCommonBase, number>({
+  name: "longitude"
+});
 longitudeProperty.register(MapboxViewCommonBase);
 
-export const showUserLocationProperty = new Property<MapboxViewCommonBase, boolean>({
+export const showUserLocationProperty = new Property<
+  MapboxViewCommonBase,
+  boolean
+>({
   name: "showUserLocation",
   defaultValue: MapboxCommon.defaults.showUserLocation,
   valueConverter: booleanConverter
@@ -637,7 +722,10 @@ export const hideLogoProperty = new Property<MapboxViewCommonBase, boolean>({
 });
 hideLogoProperty.register(MapboxViewCommonBase);
 
-export const hideAttributionProperty = new Property<MapboxViewCommonBase, boolean>({
+export const hideAttributionProperty = new Property<
+  MapboxViewCommonBase,
+  boolean
+>({
   name: "hideAttribution",
   defaultValue: MapboxCommon.defaults.hideAttribution,
   valueConverter: booleanConverter
@@ -658,14 +746,20 @@ export const disableZoomProperty = new Property<MapboxViewCommonBase, boolean>({
 });
 disableZoomProperty.register(MapboxViewCommonBase);
 
-export const disableRotationProperty = new Property<MapboxViewCommonBase, boolean>({
+export const disableRotationProperty = new Property<
+  MapboxViewCommonBase,
+  boolean
+>({
   name: "disableRotation",
   defaultValue: MapboxCommon.defaults.disableRotation,
   valueConverter: booleanConverter
 });
 disableRotationProperty.register(MapboxViewCommonBase);
 
-export const disableScrollProperty = new Property<MapboxViewCommonBase, boolean>({
+export const disableScrollProperty = new Property<
+  MapboxViewCommonBase,
+  boolean
+>({
   name: "disableScroll",
   defaultValue: MapboxCommon.defaults.disableScroll,
   valueConverter: booleanConverter
@@ -679,11 +773,12 @@ export const disableTiltProperty = new Property<MapboxViewCommonBase, boolean>({
 });
 disableTiltProperty.register(MapboxViewCommonBase);
 
-export const delayProperty = new Property<MapboxViewCommonBase, number>({name: "delay"});
+export const delayProperty = new Property<MapboxViewCommonBase, number>({
+  name: "delay"
+});
 delayProperty.register(MapboxViewCommonBase);
 
 export abstract class MapboxViewBase extends MapboxViewCommonBase {
-
   static mapReadyEvent: string = "mapReady";
   static locationPermissionGrantedEvent: string = "locationPermissionGranted";
 

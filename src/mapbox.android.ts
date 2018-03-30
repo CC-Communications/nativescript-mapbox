@@ -52,6 +52,7 @@ export class MapboxView extends MapboxViewBase {
     if (!this.mapView && this.config.accessToken) {
       this.mapbox = new Mapbox();
       let settings = Mapbox.merge(this.config, Mapbox.defaults);
+     
       com.mapbox.mapboxsdk.Mapbox.getInstance(this._context, settings.accessToken);
 
       let drawMap = () => {
@@ -138,7 +139,9 @@ const _getMapboxMapOptions = (settings) => {
       .tiltGesturesEnabled(!settings.disableTilt)
       .zoomGesturesEnabled(!settings.disableZoom)
       .attributionEnabled(!settings.hideAttribution)
-      .logoEnabled(!settings.hideLogo);
+      .logoEnabled(!settings.hideLogo)
+      .textureMode(true)
+      ;
 
   // zoomlevel is not applied unless center is set
   if (settings.zoomLevel && !settings.center) {
@@ -696,7 +699,7 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
   getUserLocation(): Promise<UserLocation> {
     return new Promise((resolve, reject) => {
       try {
-        const loc = _locationEngine ? _locationEngine.getLastLocation() : null;
+        const loc = _locationEngine() ? _locationEngine().getLastLocation() : null;
         if (loc === null) {
           reject("Location not available");
         } else {
@@ -1347,10 +1350,10 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
     point.x = data.x;
     point.y = data.y;
 
-    var results: any = theMap.mapboxMap.queryRenderedFeatures(point, layers);
-    var features: Feature[] = [];
+    let results: any = theMap.mapboxMap.queryRenderedFeatures(point, layers);
+    let features: Feature[] = [];
 
-    for (var idx = 0; idx < results.size(); idx++)
+    for (let idx = 0; idx < results.size(); idx++)
       features.push(JSON.parse(results.get(idx).toJson()));
 
     return features;
@@ -1367,10 +1370,10 @@ export class Mapbox extends MapboxCommon implements MapboxApi {
   getFeaturesInPointRect(northeast: MapPoint, southwest: MapPoint, layers: string[], nativeMap?): Feature[] {
     const theMap = nativeMap || _mapbox;
     let rect: android.graphics.RectF = new android.graphics.RectF(northeast.x, northeast.y, southwest.x, southwest.y);
-    var results: any = theMap.mapboxMap.queryRenderedFeatures(rect, layers);
-    var features: Feature[] = [];
+    let results: any = theMap.mapboxMap.queryRenderedFeatures(rect, layers);
+    let features: Feature[] = [];
 
-    for (var idx = 0; idx < results.size(); idx++)
+    for (let idx = 0; idx < results.size(); idx++)
       features.push(JSON.parse(results.get(idx).toJson()));
 
     return features;
